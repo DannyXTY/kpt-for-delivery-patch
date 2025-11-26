@@ -4,10 +4,34 @@ export default class Scheduler extends LightningElement {
     draggedOrderId = null;
 
     @track orders = [
-        { id: 1, name: 'FI-001', customer: 'FPFL000021', productCode: "FPFL000021", productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x700 L", quantity: 2, weight: 4000 },
-        { id: 2, name: 'FI-002', customer: 'FPFL000022', productCode: "FPFL000022", productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x800 L", quantity: 3, weight: 7000 },
-        { id: 3, name: 'FI-003', customer: 'FPFL000023', productCode: "FPFL000023", productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x900 L", quantity: 4, weight: 7000 },
-        { id: 4, name: 'FI-004', customer: 'FPFL000024', productCode: "FPFL000024", productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x1000 L", quantity: 5, weight: 7000 }
+        {
+            id: 1, name: 'FI-001',
+            customer: 'FPFL000021',
+            productCode: "FPFL000021",
+            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x700 L",
+            quantity: 2, weight: 4000
+        },
+        {
+            id: 2, name: 'FI-002',
+            customer: 'FPFL000022',
+            productCode: "FPFL000022",
+            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x800 L",
+            quantity: 3, weight: 7000
+        },
+        {
+            id: 3, name: 'FI-003',
+            customer: 'FPFL000023',
+            productCode: "FPFL000023",
+            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x900 L",
+            quantity: 4, weight: 7000
+        },
+        {
+            id: 4, name: 'FI-004',
+            customer: 'FPFL000024',
+            productCode: "FPFL000024",
+            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x1000 L",
+            quantity: 5, weight: 7000
+        }
     ];
 
     @track calendarData = [

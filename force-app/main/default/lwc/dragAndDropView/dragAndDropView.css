@@ -286,3 +286,41 @@
     color: #888;
     padding: 12px 0;
 }
+
+.flex {
+    display: flex;
+}
+
+.flex-row {
+    flex-direction: row;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.weight-badge {
+    display: inline-block;
+    background: #f3f3f3;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #3e3e3c;
+    margin-top: 8px;
+}
+
+.weight-badge .under-capacity {
+    background: #2e844a;
+    color: white;
+}
+
+.weight-badge .near-capacity {
+    background: #ffa500;
+    color: white;
+}
+
+.weight-badge .at-capacity {
+    background: #c23934;
+    color: white;
+}

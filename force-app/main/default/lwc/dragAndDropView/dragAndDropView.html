@@ -89,11 +89,28 @@
                 </div>
 
                 <template for:each={orders} for:item="o">
-                    <div key={o.id} class="order-card" draggable="true" data-id={o.id} ondragstart={handleDragStart}>
-                        <div class="order-id">{o.name}</div>
-                        <div class="order-info">
-                            {o.customer} - {o.productName} <br />
-                            Quantity: {o.quantity}
+                    <div key={o.id} class="order-card flex flex-row justify-between" draggable="true" data-id={o.id}
+                        ondragstart={handleDragStart}>
+                        <div class="">
+                            <div class="order-id">{o.name}</div>
+                            <div class="">
+                                <input type="checkbox" name="fopi-selected" />
+                            </div>
+                        </div>
+                        <div class="order-info ">
+                            <div class="">
+                                <div>Customer:</div>
+                                <div>{o.customer}</div>
+                            </div>
+                            <div>
+                                <div>Product: </div>
+                                <div>{o.productName}</div>
+                            </div>
+
+                            <div>
+                                <div>Quantity: </div>
+                                <div>{o.quantity}</div>
+                            </div>
                         </div>
                         <div class="order-weight">{o.weight} kg</div>
                     </div>
