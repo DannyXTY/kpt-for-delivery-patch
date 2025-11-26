@@ -1,3 +1,144 @@
+/* Main App */
+
+.dragDropId {
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    background: #f3f3f3;
+    color: #181818;
+}
+
+/* Main App */
+.app-header {
+    background: white;
+    padding: 20px 30px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.app-header h1 {
+    font-size: 24px;
+    font-weight: 400;
+    color: #080707;
+}
+
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-secondary {
+    background: white;
+    color: #0176d3;
+    border: 1px solid #0176d3;
+}
+
+.btn-success {
+    background: #2e844a;
+    color: white;
+}
+
+.btn-primary {
+    color: white;
+    background: #0d6efd;
+}
+
+/* Toolbar Section */
+.toolbar {
+    background: white;
+    padding: 15px 30px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.filter-section {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.filter-section label {
+    font-size: 13px;
+    color: #3e3e3c;
+    font-weight: 600;
+}
+
+.filter-section select,
+.filter-section input {
+    padding: 8px 12px;
+    border: 1px solid #c9c9c9;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.stats-section {
+    display: flex;
+    gap: 30px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #0176d3;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #706e6b;
+    margin-top: 4px;
+}
+
+/* Legend part */
+.legend {
+    display: flex;
+    gap: 20px;
+    padding: 15px 30px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #3e3e3c;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+
+
+
+
+
 .scheduler-container {
     display: flex;
     gap: 16px;
@@ -15,10 +156,27 @@
     overflow-y: auto;
 }
 
+
+.mt-4 {
+    margin-top: 1rem;
+}
+
+.w-100 {
+    width: 100%;
+}
+
 .panel-header {
     font-size: 16px;
     font-weight: bold;
     margin-bottom: 12px;
+    background: #fafaf9;
+}
+
+.panel-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #3e3e3c;
 }
 
 .order-card {
@@ -30,17 +188,20 @@
     cursor: grab;
     transition: box-shadow 0.15s;
 }
+
 .order-card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .order-id {
     font-weight: bold;
 }
+
 .order-info {
     font-size: 12px;
     color: #666;
 }
+
 .order-weight {
     margin-top: 4px;
     color: #005fb2;
@@ -76,6 +237,7 @@
     font-size: 14px;
     font-weight: bold;
 }
+
 .day-date {
     font-size: 12px;
     color: #666;

@@ -1,19 +1,19 @@
 <template>
-    <!-- Header -->
-    <div>
-        <h1>🚚 Delivery Planning Dashboard</h1>
-        <div>
-            <button><span>↻</span>Refresh</button>
-            <button><span>📊</span>Reports</button>
-            <button><span>⚙️</span>Settings</button>
+    <div class="dragDropId">
+        <!-- Header -->
+        <div class="app-header">
+            <h1>🚚 Delivery Planning Dashboard</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary"><span>↻</span>Refresh</button>
+                <button class="btn btn-secondary"><span>📊</span>Reports</button>
+                <button class="btn btn-secondary"><span>⚙️</span>Settings</button>
+            </div>
         </div>
-    </div>
 
-    <!-- Setting for main page -->
-    <div>
-        <div class="left-side">
-            <div class="form-group">
-                <p>Customer:</p>
+        <!-- Toolbar for main page -->
+        <div class="toolbar">
+            <div class="filter-section left-side">
+                <label>Customer:</label>
                 <select>
                     <option value="all">All Customers</option>
                     <option value="KKB">KKB</option>
@@ -23,9 +23,7 @@
                     <option value="BTA">BTA</option>
                     <option value="VCST">VCST</option>
                 </select>
-            </div>
-            <div class="form-group">
-                <p>Product Type:</p>
+                <label>Product Type:</label>
                 <select>
                     <option value="all">All Products</option>
                     <option value="DISC">DISC</option>
@@ -33,105 +31,112 @@
                     <option value="PLOUGH">PLOUGH</option>
                     <option value="SCREW">SCREW</option>
                 </select>
-            </div>
 
-            <div class="form-group">
-                <p>Week</p>
+                <label>Week</label>
                 <input type="week" value="2025-W47">
-            </div>
-
-        </div>
-        <div class="right-side">
-            <div class="">
-                <span>28</span>
-                Pending
-            </div>
-            <div class="">
-                <span>42</span>
-                Scheduled
-            </div>
-            <div class="">
-                <span>87%</span>
 
             </div>
-        </div>
+            <!-- stats section part -->
+            <div class="stats-section right-side">
+                <div class=" stat-item">
+                    <div class="stat-value">28</div>
+                    <div class="stat-label">Pending</div>
 
-    </div>
-
-    <!-- Marker Capacity -->
-    <div class="legend">
-        <div class="legend-item">
-            <div class="legend-color" style="background: #0176d3;"></div>
-            <span>Scheduled</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background: #2e844a;"></div>
-            <span>Under Capacity</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background: #ffa500;"></div>
-            <span>Near Capacity</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color" style="background: #c23934;"></div>
-            <span>At Capacity</span>
-        </div>
-    </div>
-
-
-    <div class="scheduler-container">
-
-        <!-- LEFT SIDE - ORDERS -->
-        <div class="orders-panel">
-            <div class="panel-header">Pending Fulfillment Order Product Item</div>
-
-            <template for:each={orders} for:item="o">
-                <div key={o.id} class="order-card" draggable="true" data-id={o.id} ondragstart={handleDragStart}>
-                    <div class="order-id">{o.name}</div>
-                    <div class="order-info">
-                        {o.customer} - {o.productName} <br />
-                        Quantity: {o.quantity}
-                    </div>
-                    <div class="order-weight">{o.weight} kg</div>
                 </div>
-            </template>
+                <div class=" stat-item">
+                    <div class="stat-value">42</div>
+                    <div class="stat-label">Scheduled</div>
+                </div>
+
+                <div class=" stat-item">
+                    <div class="stat-value">87%</div>
+                    <div class="stat-label">Utilization</div>
+                </div>
+
+            </div>
+
         </div>
 
-        <!-- RIGHT SIDE - CALENDAR -->
-        <div class="calendar-panel">
-            <template for:each={calendarData} for:item="day">
-                <div key={day.date} class="day-column">
+        <!-- Marker Capacity -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #0176d3;"></div>
+                <span>Scheduled</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #2e844a;"></div>
+                <span>Under Capacity</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffa500;"></div>
+                <span>Near Capacity</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #c23934;"></div>
+                <span>At Capacity</span>
+            </div>
+        </div>
 
-                    <div class="day-header">
-                        <div class="day-name">{day.dayName}</div>
-                        <div class="day-date">{day.date}</div>
-                    </div>
 
-                    <template for:each={day.trucks} for:item="t">
-                        <div key={t.truckId} class="truck-card" data-truck-id={t.truckId} data-date={day.date}
-                            ondragover={handleDragOver} ondrop={handleDrop}>
+        <div class="scheduler-container">
 
-                            <div class="truck-header">
-                                <div class="truck-name">Truck {t.truckId}</div>
-                                <div class="truck-capacity">{t.capacity} kg</div>
-                            </div>
+            <!-- LEFT SIDE - ORDERS -->
+            <div class="orders-panel">
+                <div class="panel-header">
+                    <h2>📋 Pending Fulfillments (28)</h2>
+                    <button class="btn btn-success w-100">✨ AI Auto-Schedule Selected (2)</button>
+                    <button class="btn btn-primary mt-4 w-100">Submit</button>
+                </div>
 
-                            <div class="truck-orders">
-                                <template for:each={t.assignedOrders} for:item="ord">
-                                    <div key={ord} class="assigned-order">
-                                        FI-{ord}
-                                    </div>
-                                </template>
-
-                                <template if:true={t.isEmpty}>
-                                    <div class="empty-hint">Drop orders here</div>
-                                </template>
-                            </div>
-
+                <template for:each={orders} for:item="o">
+                    <div key={o.id} class="order-card" draggable="true" data-id={o.id} ondragstart={handleDragStart}>
+                        <div class="order-id">{o.name}</div>
+                        <div class="order-info">
+                            {o.customer} - {o.productName} <br />
+                            Quantity: {o.quantity}
                         </div>
-                    </template>
-                </div>
-            </template>
+                        <div class="order-weight">{o.weight} kg</div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- RIGHT SIDE - CALENDAR -->
+            <div class="calendar-panel">
+                <template for:each={calendarData} for:item="day">
+                    <div key={day.date} class="day-column">
+
+                        <div class="day-header">
+                            <div class="day-name">{day.dayName}</div>
+                            <div class="day-date">{day.date}</div>
+                        </div>
+
+                        <template for:each={day.trucks} for:item="t">
+                            <div key={t.truckId} class="truck-card" data-truck-id={t.truckId} data-date={day.date}
+                                ondragover={handleDragOver} ondrop={handleDrop}>
+
+                                <div class="truck-header">
+                                    <div class="truck-name">Truck {t.truckId}</div>
+                                    <div class="truck-capacity">{t.capacity} kg</div>
+                                </div>
+
+                                <div class="truck-orders">
+                                    <template for:each={t.assignedOrders} for:item="ord">
+                                        <div key={ord} class="assigned-order">
+                                            FI-{ord}
+                                        </div>
+                                    </template>
+
+                                    <template if:true={t.isEmpty}>
+                                        <div class="empty-hint">Drop orders here</div>
+                                    </template>
+                                </div>
+
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
         </div>
 
     </div>
