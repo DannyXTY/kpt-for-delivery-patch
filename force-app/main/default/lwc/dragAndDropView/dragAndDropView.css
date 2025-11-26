@@ -1,0 +1,126 @@
+.scheduler-container {
+    display: flex;
+    gap: 16px;
+    height: 100%;
+    padding: 12px;
+}
+
+/* ---------------- LEFT PANEL ---------------- */
+
+.orders-panel {
+    width: 280px;
+    background: #fafafa;
+    border-right: 1px solid #e0e0e0;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.panel-header {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.order-card {
+    background: white;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: grab;
+    transition: box-shadow 0.15s;
+}
+.order-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.order-id {
+    font-weight: bold;
+}
+.order-info {
+    font-size: 12px;
+    color: #666;
+}
+.order-weight {
+    margin-top: 4px;
+    color: #005fb2;
+    font-weight: bold;
+}
+
+/* ---------------- RIGHT PANEL ---------------- */
+
+.calendar-panel {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    flex-grow: 1;
+}
+
+.day-column {
+    width: 260px;
+    min-width: 260px;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.day-header {
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 12px;
+}
+
+.day-name {
+    font-size: 14px;
+    font-weight: bold;
+}
+.day-date {
+    font-size: 12px;
+    color: #666;
+}
+
+/* ---------------- TRUCK BOXES ---------------- */
+
+.truck-card {
+    background: #f9f9f9;
+    border: 2px dashed #cccccc;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 14px;
+    min-height: 120px;
+    transition: border 0.2s;
+}
+
+.truck-card:hover {
+    border-color: #0070d2;
+}
+
+.truck-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.truck-orders {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.assigned-order {
+    background: #0070d2;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+}
+
+.empty-hint {
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    padding: 12px 0;
+}

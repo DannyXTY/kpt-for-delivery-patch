@@ -1,0 +1,66 @@
+<template>
+    <div class="scheduler-container">
+
+        <!-- LEFT SIDE - ORDERS -->
+        <div class="orders-panel">
+            <div class="panel-header">Pending Fulfillment Order Product Item</div>
+
+            <template for:each={orders} for:item="o">
+                <div key={o.id}
+                     class="order-card"
+                     draggable="true"
+                     data-id={o.id}
+                     ondragstart={handleDragStart}>
+                    <div class="order-id">{o.name}</div>
+                    <div class="order-info">
+                        {o.customer} - {o.productName} <br/>
+                        Quantity: {o.quantity}
+                    </div>
+                    <div class="order-weight">{o.weight} kg</div>
+                </div>
+            </template>
+        </div>
+
+        <!-- RIGHT SIDE - CALENDAR -->
+        <div class="calendar-panel">
+            <template for:each={calendarData} for:item="day">
+                <div key={day.date} class="day-column">
+
+                    <div class="day-header">
+                        <div class="day-name">{day.dayName}</div>
+                        <div class="day-date">{day.date}</div>
+                    </div>
+
+                    <template for:each={day.trucks} for:item="t">
+                        <div key={t.truckId}
+                             class="truck-card"
+                             data-truck-id={t.truckId}
+                             data-date={day.date}
+                             ondragover={handleDragOver}
+                             ondrop={handleDrop}>
+                            
+                            <div class="truck-header">
+                                <div class="truck-name">Truck {t.truckId}</div>
+                                <div class="truck-capacity">{t.capacity} kg</div>
+                            </div>
+
+                            <div class="truck-orders">
+                                <template for:each={t.assignedOrders} for:item="ord">
+                                    <div key={ord} class="assigned-order">
+                                        FI-{ord}
+                                    </div>
+                                </template>
+
+                                <template if:true={t.isEmpty}>
+                                    <div class="empty-hint">Drop orders here</div>
+                                </template>
+                            </div>
+
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+    </div>
+</template>
