@@ -13,7 +13,7 @@ export default class Scheduler extends LightningElement {
     @track calendarData = [
         {
             dayName: 'Monday',
-            date: '2025-11-25',
+            date: '2025-11-24',
             trucks: [
                 { truckId: 1, capacity: 14000, assignedOrders: [1] },
                 { truckId: 2, capacity: 10000, assignedOrders: [] }
@@ -21,10 +21,25 @@ export default class Scheduler extends LightningElement {
         },
         {
             dayName: 'Tuesday',
-            date: '2025-11-26',
+            date: '2025-11-25',
             trucks: [
                 { truckId: 1, capacity: 14000, assignedOrders: [2] }
             ]
+        },
+        {
+            dayName: 'Wednesday',
+            date: '2025-11-26',
+            trucks: []
+        },
+        {
+            dayName: 'Thursday',
+            date: '2025-11-27',
+            trucks: []
+        },
+        {
+            dayName: 'Friday',
+            date: '2025-11-28',
+            trucks: []
         }
     ];
 
