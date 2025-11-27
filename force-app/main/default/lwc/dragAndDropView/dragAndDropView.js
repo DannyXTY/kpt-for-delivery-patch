@@ -1,5 +1,9 @@
 import { LightningElement, track, wire } from 'lwc';
 import getAccounts from '@salesforce/apex/DragDropView.getAccounts';
+import getPendingFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getPendingFulfillmentOrderProductItems';
+import getAssignedFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getAssignedFulfillmentOrderProductItems';
+import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
+import getFOPI from '@salesforce/apex/DragDropView.getFOPI';
 
 export default class Scheduler extends LightningElement {
     draggedOrderId = null;
