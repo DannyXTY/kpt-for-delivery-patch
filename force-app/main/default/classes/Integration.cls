@@ -2,11 +2,11 @@ public with sharing class Integration {
 
   private class TruckDateInfo {
     private String truckId;
-    private String date;
+    private String deliveryDate;
     
-    private TruckDateInfo(String truckId, String date) {
+    private TruckDateInfo(String truckId, String deliveryDate) {
       this.truckId = truckId;
-      this.date = date;
+      this.deliveryDate = deliveryDate;
     }
   }
 
@@ -16,12 +16,12 @@ public with sharing class Integration {
       for (dtoUpsertDeliveryInfoFOProductItem param : params) {
         for (dtoUpsertDeliveryInfoFOProductItem.clsTruck truck : param.trucks) {
             for (String productItemId : truck.assignedFOProductItem) {
-                productItemToTruckDateMap.put(productItemId, new TruckDateInfo(truck.truckId, param.date));
+                productItemToTruckDateMap.put(productItemId, new TruckDateInfo(truck.truckId, param.deliveryDate));
             }
         }
       }
 
-      List<String> productItemNames = productItemToTruckDateMap.keySet();
+      Set<String> productItemNames = productItemToTruckDateMap.keySet();
 
       List<Fulfillment_Order_Product_Item__c> foProductItems = [
         SELECT
@@ -38,7 +38,7 @@ public with sharing class Integration {
         }
 
         foProductItem.Truck__c = truckDateInfo.truckId;
-        foProductItem.Delivery_Date__c = Date.valueOf(truckDateInfo.date);
+        foProductItem.Delivery_Date__c = Date.valueOf(truckDateInfo.deliveryDate);
       }
 
       if (!foProductItems.isEmpty()) {

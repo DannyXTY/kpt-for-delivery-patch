@@ -1,6 +1,6 @@
 public class dtoUpsertDeliveryInfoFOProductItem {
     public String dayName;
-    public String date;
+    public String deliveryDate;
     public List<clsTruck> trucks;
     
     public class clsTruck {
