@@ -45,7 +45,7 @@ export default class Scheduler extends LightningElement {
             customer: 'FPFL000023',
             productCode: "FPFL000023",
             productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x900 L",
-            quantity: 4, weight: 7000,
+            quantity: 4, weight: 1000,
             checked: false
         },
         {
@@ -53,7 +53,15 @@ export default class Scheduler extends LightningElement {
             customer: 'FPFL000024',
             productCode: "FPFL000024",
             productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x1000 L",
-            quantity: 5, weight: 7000,
+            quantity: 5, weight: 1000,
+            checked: false
+        },
+        {
+            id: 5, name: 'FI-005',
+            customer: 'FPFL000025',
+            productCode: "FPFL000025",
+            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.3x59x1000 L",
+            quantity: 5, weight: 1000,
             checked: false
         }
     ];
@@ -63,15 +71,15 @@ export default class Scheduler extends LightningElement {
             dayName: 'Monday',
             date: '2025-11-24',
             trucks: [
-                { truckId: 1, capacity: 14000, assignedOrders: [] },
-                { truckId: 2, capacity: 10000, assignedOrders: [] }
+                { truckId: "T1", capacity: 10000, assignedOrders: [] },
+                { truckId: "T2", capacity: 10000, assignedOrders: [] }
             ]
         },
         {
             dayName: 'Tuesday',
             date: '2025-11-25',
             trucks: [
-                { truckId: 1, capacity: 14000, assignedOrders: [] }
+                { truckId: "T1", capacity: 14000, assignedOrders: [] }
             ]
         },
         {
@@ -111,17 +119,27 @@ export default class Scheduler extends LightningElement {
     }
 
     assignOrder(orderId, truckId, date) {
-        // Remove from any truck
+        const orderObj = this.orders.find(o => o.id == orderId || o.name == orderId);
+
+        if (!orderObj) {
+            console.error('Order not found:', orderId);
+            return;
+        }
+
+        // Clean previous assignments
         this.calendarData.forEach(day => {
             day.trucks.forEach(t => {
-                t.assignedOrders = t.assignedOrders.filter(o => o != orderId);
+                t.assignedOrders = t.assignedOrders.filter(o => o.id !== orderObj.id);
             });
         });
 
         // Assign to new truck
         const day = this.calendarData.find(d => d.date === date);
         const t = day.trucks.find(t => t.truckId == truckId);
-        t.assignedOrders.push((orderId));
+
+        // Push full object, not ID
+        t.assignedOrders.push({ ...orderObj });
+        this.recalcTruckStatuses();
     }
 
     handleCheckbox(event) {
@@ -138,14 +156,15 @@ export default class Scheduler extends LightningElement {
     }
 
     handleRemove(e) {
-        const orderId = (e.currentTarget.dataset.id);
-        const truckId = parseInt(e.currentTarget.dataset.truckId);
+        const orderId = parseInt(e.currentTarget.dataset.id);
+        const truckId = e.currentTarget.dataset.truckId;
         const date = e.currentTarget.dataset.date;
 
         const day = this.calendarData.find(d => d.date === date);
-        const truck = day.trucks.find(t => t.truckId === truckId);
+        const truck = day.trucks.find(t => t.truckId == truckId);
 
-        truck.assignedOrders = truck.assignedOrders.filter(o => o !== orderId);
+        truck.assignedOrders = truck.assignedOrders.filter(o => o.id !== orderId);
+        this.recalcTruckStatuses();
     }
 
     formatDateSG(dateValue) {
@@ -199,6 +218,7 @@ export default class Scheduler extends LightningElement {
         }
 
         this.calendarData = days;
+        this.recalcTruckStatuses();
     }
 
     connectedCallback() {
@@ -209,10 +229,10 @@ export default class Scheduler extends LightningElement {
 
     buildDefaultTrucks() {
         return [
-            { truckId: 'T1', capacity: 14000, assignedOrders: [] },
-            { truckId: 'T2', capacity: 4200, assignedOrders: [] },
-            { truckId: 'T3', capacity: 14000, assignedOrders: [] },
-            { truckId: 'T4', capacity: 1500, assignedOrders: [] }
+            { truckId: "T1", capacity: 10000, assignedOrders: [] },
+            { truckId: "T2", capacity: 4200, assignedOrders: [] },
+            { truckId: "T3", capacity: 14000, assignedOrders: [] },
+            { truckId: "T4", capacity: 1500, assignedOrders: [] }
         ];
     }
 
@@ -226,6 +246,47 @@ export default class Scheduler extends LightningElement {
 
     handleCustomerChange(event) {
         this.selectedCustomer = event.target.value;
+    }
+
+
+    recalcTruckStatuses() {
+        this.calendarData = this.calendarData.map(day => {
+            const trucks = day.trucks.map(t => {
+                // sum weights (assignedOrders might be objects or ids — handle both)
+                const total = (t.assignedOrders || []).reduce((sum, o) => {
+                    // if object with weight, use it; if ID or string, find from orders
+                    const weight = (o && typeof o === 'object' && o.weight)
+                        ? o.weight
+                        : (() => {
+                            const found = this.orders.find(x => x.id == o || x.name == o);
+                            return found ? found.weight : 0;
+                        })();
+                    return sum + weight;
+                }, 0);
+
+                const capacity = t.capacity || 0;
+                const ratio = capacity > 0 ? total / capacity : 0;
+                let statusClass = 'truck-capacity under-capacity';
+                if (ratio > 1) statusClass = 'truck-capacity at-capacity';
+                else if (ratio >= 0.8) statusClass = 'truck-capacity near-capacity';
+
+                // optional: percent used for capacity bar
+                const capacityPct = Math.min(100, Math.round((capacity > 0 ? (total / capacity) * 100 : 0)));
+
+                return {
+                    ...t,
+                    totalWeight: total,
+                    capacityPct,
+                    statusClass,
+                    isEmpty: (t.assignedOrders || []).length === 0
+                };
+            });
+
+            return {
+                ...day,
+                trucks
+            };
+        });
     }
 
 

@@ -20,13 +20,18 @@
                         <option key={acc.Id}>{acc.Name}</option>
                     </template>
                 </select>
-                <label>Product Type:</label>
+                <label>Product Family:</label>
                 <select>
                     <option value="all">All Products</option>
-                    <option value="DISC">DISC</option>
-                    <option value="DOZER BLADE">DOZER BLADE</option>
-                    <option value="PLOUGH">PLOUGH</option>
-                    <option value="SCREW">SCREW</option>
+                    <option value="Disc Plow (บุกเบิก)">Disc Plow (บุกเบิก)</option>
+                    <option value="Disc Harrow (ผานพรวน)">Disc Harrow (ผานพรวน)</option>
+                    <option value="Furrow Disc (คัดท้าย)">Furrow Disc (คัดท้าย)</option>
+                    <option value="Notch Disc (ใบจักร)">Notch Disc (ใบจักร)</option>
+                    <option value="Rotary Blade (โรตารี่)">Rotary Blade (โรตารี่)</option>
+                    <option value="Dozer Blade (ใบดันดิน)">Dozer Blade (ใบดันดิน)</option>
+                    <option value="Screw Flight (ใบเกลียว)">Screw Flight (ใบเกลียว)</option>
+                    <option value="Implements (อุปกรณ์ต่อพ่วง)">Implements (อุปกรณ์ต่อพ่วง)</option>
+                    <option value="etc. (อื่น ๆ)">etc. (อื่น ๆ)</option>
                 </select>
 
                 <label>Week</label>
@@ -102,8 +107,8 @@
                         <div class="line-card flex justify-between">
                             <span class="label-card">Product:</span>
                             <div>
-                                <span class="truncate">{o.productName}</span>
-                                <lightning-helptext content={o.productName}></lightning-helptext>
+                                <span class="truncate">{o.productCode}</span>
+                                <lightning-helptext content={o.productCode}></lightning-helptext>
 
                             </div>
                         </div>
@@ -133,17 +138,25 @@
 
                                 <div class="truck-header">
                                     <div class="truck-name">Truck {t.truckId}</div>
-                                    <div class="truck-capacity">{t.capacity} kg</div>
+                                    <div class={t.statusClass}>{t.capacity} kg</div>
                                 </div>
 
                                 <div class="truck-orders">
                                     <template for:each={t.assignedOrders} for:item="ord">
                                         <div key={ord} class="assigned-order">
-                                            {ord}
-                                            <button class="remove-btn" data-id={ord} data-truck-id={t.truckId}
-                                                data-date={day.date} onclick={handleRemove}>
-                                                ✕
-                                            </button>
+                                            <div class="flex justify-between">
+                                                {ord.name}
+                                                <button class="remove-btn" data-id={ord.id} data-truck-id={t.truckId}
+                                                    data-date={day.date} onclick={handleRemove}>
+                                                    ✕
+                                                </button>
+                                            </div>
+                                            <div class="">
+                                                <label>{ord.productCode} - {ord.quantity} pcs</label>
+                                            </div>
+                                            <div class="">
+                                                <label>{ord.weight} kg</label>
+                                            </div>
 
                                         </div>
                                     </template>

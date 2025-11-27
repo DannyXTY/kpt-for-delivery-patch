@@ -273,10 +273,6 @@
     border-radius: 6px;
     padding: 6px 8px;
     font-size: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
 }
 
 .remove-btn {
@@ -324,19 +320,28 @@
     margin-top: 8px;
 }
 
-.weight-badge .under-capacity {
+.weight-badge .under-capacity,
+.under-capacity {
     background: #2e844a;
     color: white;
 }
 
-.weight-badge .near-capacity {
+.weight-badge .near-capacity,
+.near-capacity {
     background: #ffa500;
     color: white;
 }
 
-.weight-badge .at-capacity {
+.weight-badge .at-capacity,
+.at-capacity {
     background: #c23934;
     color: white;
+}
+
+.truck-capacity {
+    padding: 4px 10px;
+    border-radius: 12px;
+
 }
 
 .header-card {
