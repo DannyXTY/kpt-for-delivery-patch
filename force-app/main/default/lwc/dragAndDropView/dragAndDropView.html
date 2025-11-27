@@ -14,14 +14,11 @@
         <div class="toolbar">
             <div class="filter-section left-side">
                 <label>Customer:</label>
-                <select>
+                <select name="customer" onchange={handleCustomerChange}>
                     <option value="all">All Customers</option>
-                    <option value="KKB">KKB</option>
-                    <option value="SKCN">SKCN</option>
-                    <option value="PTT">PTT</option>
-                    <option value="CSD">CSD</option>
-                    <option value="BTA">BTA</option>
-                    <option value="VCST">VCST</option>
+                    <template for:each={accounts} for:item="acc">
+                        <option key={acc.Id}>{acc.Name}</option>
+                    </template>
                 </select>
                 <label>Product Type:</label>
                 <select>
@@ -33,7 +30,10 @@
                 </select>
 
                 <label>Week</label>
-                <input type="week" value="2025-W47">
+                <lightning-input type="date" label="" value={selectedDate} onchange={handleDateChange}
+                    placeholder="YYYY-MM-DD">
+                </lightning-input>
+
 
             </div>
             <!-- stats section part -->
@@ -84,34 +84,34 @@
             <div class="orders-panel">
                 <div class="panel-header">
                     <h2>📋 Pending Fulfillments (28)</h2>
-                    <button class="btn btn-success w-100">✨ AI Auto-Schedule Selected (2)</button>
+                    <button class="btn btn-success w-100">✨ AI Auto-Schedule Selected ({countSelectedCheckbox})</button>
                     <button class="btn btn-primary mt-4 w-100">Submit</button>
                 </div>
 
                 <template for:each={orders} for:item="o">
-                    <div key={o.id} class="order-card flex flex-row justify-between" draggable="true" data-id={o.id}
+                    <div key={o.id} class="order-card" draggable="true" data-id={o.id} data-name={o.name}
                         ondragstart={handleDragStart}>
-                        <div class="">
-                            <div class="order-id">{o.name}</div>
-                            <div class="">
-                                <input type="checkbox" name="fopi-selected" />
-                            </div>
+                        <div class="header-card">
+                            <div class="order-link">{o.name}</div>
+                            <input type="checkbox" checked={o.checked} onchange={handleCheckbox} data-name={o.name} />
                         </div>
-                        <div class="order-info ">
-                            <div class="">
-                                <div>Customer:</div>
-                                <div>{o.customer}</div>
-                            </div>
-                            <div>
-                                <div>Product: </div>
-                                <div>{o.productName}</div>
-                            </div>
 
+                        <div class="line-card flex justify-between" style="margin-bottom: 5px;">
+                            <span class="label-card">Customer:</span> {o.customer}
+                        </div>
+                        <div class="line-card flex justify-between">
+                            <span class="label-card">Product:</span>
                             <div>
-                                <div>Quantity: </div>
-                                <div>{o.quantity}</div>
+                                <span class="truncate">{o.productName}</span>
+                                <lightning-helptext content={o.productName}></lightning-helptext>
+
                             </div>
                         </div>
+
+                        <div class="line-card flex justify-between">
+                            <span class="label-card">Quantity:</span> {o.quantity}
+                        </div>
+
                         <div class="order-weight">{o.weight} kg</div>
                     </div>
                 </template>
@@ -139,7 +139,12 @@
                                 <div class="truck-orders">
                                     <template for:each={t.assignedOrders} for:item="ord">
                                         <div key={ord} class="assigned-order">
-                                            FI-{ord}
+                                            {ord}
+                                            <button class="remove-btn" data-id={ord} data-truck-id={t.truckId}
+                                                data-date={day.date} onclick={handleRemove}>
+                                                ✕
+                                            </button>
+
                                         </div>
                                     </template>
 
