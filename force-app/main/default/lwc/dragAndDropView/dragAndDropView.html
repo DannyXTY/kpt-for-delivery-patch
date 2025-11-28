@@ -137,8 +137,11 @@
                                 ondragover={handleDragOver} ondrop={handleDrop}>
 
                                 <div class="truck-header">
-                                    <div class="truck-name">Truck {t.truckName}</div>
-                                    <div class={t.statusClass}>{t.capacity} kg</div>
+                                    <div>
+                                        <div class="truck-name truncate">{t.truckName} </div>
+                                        <lightning-helptext content={t.tooltip}></lightning-helptext>
+                                    </div>
+                                    <div class={t.statusClass}>{t.remainingCapacity} kg</div>
                                 </div>
 
                                 <div class="truck-orders">
