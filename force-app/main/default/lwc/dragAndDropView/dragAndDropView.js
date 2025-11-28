@@ -2,6 +2,7 @@ import { LightningElement, track, wire } from 'lwc';
 import getAccounts from '@salesforce/apex/DragDropView.getAccounts';
 import getPendingFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getPendingFulfillmentOrderProductItems';
 import getAssignedFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getAssignedFulfillmentOrderProductItems';
+import getFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getFulfillmentOrderProductItems';
 import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import getFOPI from '@salesforce/apex/DragDropView.getFOPI';
 
@@ -11,11 +12,16 @@ export default class dragAndDropView extends LightningElement {
     countSelectedCheckbox = 0;
     selectedDate = null;
     selectedCustomer = null;
+    countPendingFulfillments = 0;
+    weekStart = "";
+    weekEnd = "";
 
     @track accounts = [];
     @track accountError;
     @track truckList = [];
     @track truckListError;
+
+    @track orders = [];
 
     @wire(getAccounts)
     wiredAccounts({ error, data }) {
@@ -28,17 +34,8 @@ export default class dragAndDropView extends LightningElement {
         }
     }
 
-    @wire(getTruckList)
-    wiredTruckList({ error, data }) {
-        if (data) {
-            this.truckList = data;
-            this.truckListError = undefined;
-        } else if (error) {
-            this.truckList = [];
-            this.truckListError = error;
-        }
-    }
-
+    /*
+    example orders
     @track orders = [
         {
             id: 1, name: 'FI-001',
@@ -47,40 +44,9 @@ export default class dragAndDropView extends LightningElement {
             productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x700 L",
             quantity: 2, weight: 4000,
             checked: false,
-        },
-        {
-            id: 2, name: 'FI-002',
-            customer: 'FPFL000022',
-            productCode: "FPFL000022",
-            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x800 L",
-            quantity: 3, weight: 7000,
-            checked: false
-        },
-        {
-            id: 3, name: 'FI-003',
-            customer: 'FPFL000023',
-            productCode: "FPFL000023",
-            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x900 L",
-            quantity: 4, weight: 1000,
-            checked: false
-        },
-        {
-            id: 4, name: 'FI-004',
-            customer: 'FPFL000024',
-            productCode: "FPFL000024",
-            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x1000 L",
-            quantity: 5, weight: 1000,
-            checked: false
-        },
-        {
-            id: 5, name: 'FI-005',
-            customer: 'FPFL000025',
-            productCode: "FPFL000025",
-            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.3x59x1000 L",
-            quantity: 5, weight: 1000,
-            checked: false
         }
     ];
+    */
 
     @track calendarData = [
         {
@@ -155,6 +121,7 @@ export default class dragAndDropView extends LightningElement {
 
         // Push full object, not ID
         t.assignedOrders.push({ ...orderObj });
+        orderObj.status = 'Assigned';
         this.recalcTruckStatuses();
     }
 
@@ -172,7 +139,7 @@ export default class dragAndDropView extends LightningElement {
     }
 
     handleRemove(e) {
-        const orderId = parseInt(e.currentTarget.dataset.id);
+        const orderId = (e.currentTarget.dataset.id);
         const truckId = e.currentTarget.dataset.truckId;
         const date = e.currentTarget.dataset.date;
 
@@ -180,6 +147,10 @@ export default class dragAndDropView extends LightningElement {
         const truck = day.trucks.find(t => t.truckId == truckId);
 
         truck.assignedOrders = truck.assignedOrders.filter(o => o.id !== orderId);
+        // Set back to Pending
+        const orderObj = this.orders.find(o => o.id == orderId);
+        if (orderObj) orderObj.status = 'Pending';
+
         this.recalcTruckStatuses();
     }
 
@@ -235,21 +206,91 @@ export default class dragAndDropView extends LightningElement {
 
         this.calendarData = days;
         this.recalcTruckStatuses();
+        this.rebuildAssignedOrdersIntoCalendar();
     }
 
-    connectedCallback() {
+    async connectedCallback() {
         const today = new Date();
         this.selectedDate = today.toISOString().slice(0, 10);
+
+        await this.fetchTruckList();
+        await this.fetchfulfillmentOrderProductItemList();
+
         this.generateWeek(this.selectedDate);
     }
 
+    async fetchfulfillmentOrderProductItemList() {
+        try {
+            const result = await getFulfillmentOrderProductItems();
+
+            this.orders = result.map((r) => {
+                return {
+                    id: r.Id,
+                    name: r.Name,
+                    customer: r.Customer__c,
+                    productCode: r.Product__r.ProductCode,
+                    productName: r.Product__r.Name,
+                    productFamily: r.Product__r.Family,
+                    quantity: r.Quantity__c,
+                    weight: r.Total_Weight__c,
+                    status: r.Status__c,
+                    truckId: r.Truck__c,
+                    deliveryDate: r.Delivery_Date__c,
+                    checked: false,
+                };
+            });
+
+            this.countPendingFulfillments = this.orders.filter((o) => o.status === 'Pending').length;
+            this.countAssignedFulfillments = this.orders.filter((o) => o.status === 'Assigned').length;
+        } catch (error) {
+            console.error('Order load error:', error);
+            this.orders = [];
+        }
+    }
+
+    rebuildAssignedOrdersIntoCalendar() {
+        // Loop through all Assigned orders
+        this.orders
+            .filter(o => o.status === 'Assigned')
+            .forEach(order => {
+                // find calendar day
+                const day = this.calendarData.find(d => d.date === order.deliveryDate);
+                if (!day) return;
+
+                // find the truck
+                const truck = day.trucks.find(t => t.truckId === order.truckId);
+                if (!truck) return;
+
+                // push full object
+                truck.assignedOrders.push({ ...order });
+            });
+
+        this.recalcTruckStatuses();
+    }
+
+
+    async fetchTruckList() {
+        try {
+            this.truckList = await getTruckList();
+        } catch (error) {
+            console.error('Truck load error:', error);
+            this.truckList = [];
+        }
+    }
+
     buildDefaultTrucks() {
-        return [
-            { truckId: "T1", capacity: 10000, assignedOrders: [] },
-            { truckId: "T2", capacity: 4200, assignedOrders: [] },
-            { truckId: "T3", capacity: 14000, assignedOrders: [] },
-            { truckId: "T4", capacity: 1500, assignedOrders: [] }
-        ];
+        let buildTrucks = [];
+        this.truckList.map((data) => {
+            buildTrucks.push({
+                truckId: data.Id,
+                truckName: data.Name,
+                capacity: data.Total_Weight_Allowed__c,
+                remainingCapacity: data.Total_Weight_Allowed__c,
+                tooltip: `${data.Name} (Max Capacity: ${data.Total_Weight_Allowed__c} kg)`,
+                assignedOrders: []
+            })
+        })
+        return buildTrucks;
     }
 
     formatToSingapore(date) {
@@ -281,6 +322,8 @@ export default class dragAndDropView extends LightningElement {
                 }, 0);
 
                 const capacity = t.capacity || 0;
+                const remaining = capacity - total;
+
                 const ratio = capacity > 0 ? total / capacity : 0;
                 let statusClass = 'truck-capacity under-capacity';
                 if (ratio > 1) statusClass = 'truck-capacity at-capacity';
@@ -292,6 +335,7 @@ export default class dragAndDropView extends LightningElement {
                 return {
                     ...t,
                     totalWeight: total,
+                    remainingCapacity: remaining,
                     capacityPct,
                     statusClass,
                     isEmpty: (t.assignedOrders || []).length === 0
@@ -305,6 +349,11 @@ export default class dragAndDropView extends LightningElement {
         });
     }
 
+    get pendingOrders() {
+        return this.orders?.filter(o => o.status === 'Pending') || [];
+    }
 
-
+    get assignedOrders() {
+        return this.orders?.filter(o => o.status === 'Assigned') || [];
+    }
 }

@@ -44,12 +44,12 @@
             <!-- stats section part -->
             <div class="stats-section right-side">
                 <div class=" stat-item">
-                    <div class="stat-value">28</div>
+                    <div class="stat-value">{countPendingFulfillments}</div>
                     <div class="stat-label">Pending</div>
 
                 </div>
                 <div class=" stat-item">
-                    <div class="stat-value">42</div>
+                    <div class="stat-value">{countAssignedFulfillments}</div>
                     <div class="stat-label">Scheduled</div>
                 </div>
 
@@ -88,12 +88,12 @@
             <!-- LEFT SIDE - ORDERS -->
             <div class="orders-panel">
                 <div class="panel-header">
-                    <h2>📋 Pending Fulfillments (28)</h2>
+                    <h2>📋 Pending Fulfillments ({countPendingFulfillments})</h2>
                     <button class="btn btn-success w-100">✨ AI Auto-Schedule Selected ({countSelectedCheckbox})</button>
-                    <button class="btn btn-primary mt-4 w-100">Submit</button>
+                    <!-- <button class="btn btn-primary mt-4 w-100">Submit</button> -->
                 </div>
 
-                <template for:each={orders} for:item="o">
+                <template for:each={pendingOrders} for:item="o">
                     <div key={o.id} class="order-card" draggable="true" data-id={o.id} data-name={o.name}
                         ondragstart={handleDragStart}>
                         <div class="header-card">
@@ -137,8 +137,11 @@
                                 ondragover={handleDragOver} ondrop={handleDrop}>
 
                                 <div class="truck-header">
-                                    <div class="truck-name">Truck {t.truckId}</div>
-                                    <div class={t.statusClass}>{t.capacity} kg</div>
+                                    <div>
+                                        <div class="truck-name truncate">{t.truckName} </div>
+                                        <lightning-helptext content={t.tooltip}></lightning-helptext>
+                                    </div>
+                                    <div class={t.statusClass}>{t.remainingCapacity} kg</div>
                                 </div>
 
                                 <div class="truck-orders">
