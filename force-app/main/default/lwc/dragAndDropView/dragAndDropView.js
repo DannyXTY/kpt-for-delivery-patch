@@ -6,6 +6,12 @@ import getFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getFu
 import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import getFOPI from '@salesforce/apex/DragDropView.getFOPI';
 
+import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
+import updateFOProductItemToPending from '@salesforce/apex/Integration.updateFOProductItemToPending';
+
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+
+
 export default class dragAndDropView extends LightningElement {
     draggedOrderId = null;
 
@@ -100,7 +106,7 @@ export default class dragAndDropView extends LightningElement {
         this.assignOrder(orderId, truckId, date);
     }
 
-    assignOrder(orderId, truckId, date) {
+    async assignOrder(orderId, truckId, date) {
         const orderObj = this.orders.find(o => o.id == orderId || o.name == orderId);
 
         if (!orderObj) {
@@ -108,21 +114,49 @@ export default class dragAndDropView extends LightningElement {
             return;
         }
 
-        // Clean previous assignments
-        this.calendarData.forEach(day => {
-            day.trucks.forEach(t => {
-                t.assignedOrders = t.assignedOrders.filter(o => o.id !== orderObj.id);
+        const payload = [
+            {
+                deliveryDate: orderObj.deliveryDate,
+                trucks: [
+                    {
+                        truckId: orderObj.truckId,
+                        assignedFOProductItem: [orderObj.name]   // Apex expects Name
+                    }
+                ]
+            }
+        ];
+
+        try {
+            await upsertDeliveryInfoFOProductItem({ params: payload });
+            console.log("Assigned updated in Salesforce:", orderObj.name);
+
+            // Clean previous assignments
+            this.calendarData.forEach(day => {
+                day.trucks.forEach(t => {
+                    t.assignedOrders = t.assignedOrders.filter(o => o.id !== orderObj.id);
+                });
             });
-        });
 
-        // Assign to new truck
-        const day = this.calendarData.find(d => d.date === date);
-        const t = day.trucks.find(t => t.truckId == truckId);
+            // Assign to new truck
+            const day = this.calendarData.find(d => d.date === date);
+            const t = day.trucks.find(t => t.truckId == truckId);
 
-        // Push full object, not ID
-        t.assignedOrders.push({ ...orderObj });
-        orderObj.status = 'Assigned';
-        this.recalcTruckStatuses();
+            // Push full object, not ID
+            t.assignedOrders.push({ ...orderObj });
+            orderObj.status = 'Assigned';
+            orderObj.truckId = truckId;
+            orderObj.deliveryDate = date;
+
+            this.recalcTruckStatuses();
+            showToast("Assigned truck in Salesforce", orderObj.name, "success")
+
+        } catch (error) {
+            console.error("Apex assign error", err);
+            showToast("Error", err.body?.message || "Failed to assign", "error")
+
+        }
+
+
     }
 
     handleCheckbox(event) {
@@ -138,20 +172,32 @@ export default class dragAndDropView extends LightningElement {
         }
     }
 
-    handleRemove(e) {
+    async handleRemove(e) {
         const orderId = (e.currentTarget.dataset.id);
         const truckId = e.currentTarget.dataset.truckId;
         const date = e.currentTarget.dataset.date;
 
-        const day = this.calendarData.find(d => d.date === date);
-        const truck = day.trucks.find(t => t.truckId == truckId);
-
-        truck.assignedOrders = truck.assignedOrders.filter(o => o.id !== orderId);
-        // Set back to Pending
         const orderObj = this.orders.find(o => o.id == orderId);
-        if (orderObj) orderObj.status = 'Pending';
+        if (!orderObj) return;
 
-        this.recalcTruckStatuses();
+        try {
+            await updateFOProductItemToPending({ FOPIName: orderObj.name });
+
+            const day = this.calendarData.find(d => d.date === date);
+            const truck = day.trucks.find(t => t.truckId == truckId);
+
+            truck.assignedOrders = truck.assignedOrders.filter(o => o.id !== orderId);
+
+            orderObj.status = "Pending";
+            orderObj.truckId = null;
+            orderObj.deliveryDate = null;
+
+            this.recalcTruckStatuses();
+            this.showToast("Success", "Removed from Truck", "success");
+        } catch (error) {
+            console.error("Remove failed:", error);
+            this.showToast("Error", error.body?.message || "Failed to remove", "error");
+        }
     }
 
     formatDateSG(dateValue) {
@@ -355,5 +401,14 @@ export default class dragAndDropView extends LightningElement {
 
     get assignedOrders() {
         return this.orders?.filter(o => o.status === 'Assigned') || [];
+    }
+
+    showToast(title, message, variant) {
+        const event = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant
+        });
+        this.dispatchEvent(event);
     }
 }
