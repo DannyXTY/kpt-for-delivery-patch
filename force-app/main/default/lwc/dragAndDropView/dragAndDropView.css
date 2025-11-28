@@ -341,6 +341,10 @@
 .truck-capacity {
     padding: 4px 10px;
     border-radius: 12px;
+    white-space: nowrap;
+    display: inline-block;
+    flex-shrink: 0;
+
 }
 
 .truck-name {
