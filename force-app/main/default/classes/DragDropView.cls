@@ -42,7 +42,9 @@ public with sharing class DragDropView {
         return [
             SELECT Id, Delivery_Date__c, 
             Name, Quantity__c, Status__c, 
-            Total_Weight__c, Unit_Weight__c, Truck__c
+            Total_Weight__c, Unit_Weight__c, Truck__c,
+            Product__r.Name, Product__r.ProductCode,
+            Product__r.Family
             FROM Fulfillment_Order_Product_Item__c
             ORDER BY Name
         ];
