@@ -5,14 +5,17 @@ import getAssignedFulfillmentOrderProductItems from '@salesforce/apex/DragDropVi
 import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import getFOPI from '@salesforce/apex/DragDropView.getFOPI';
 
-export default class Scheduler extends LightningElement {
+export default class dragAndDropView extends LightningElement {
     draggedOrderId = null;
+
     countSelectedCheckbox = 0;
     selectedDate = null;
     selectedCustomer = null;
 
     @track accounts = [];
-    @track error;
+    @track accountError;
+    @track truckList = [];
+    @track truckListError;
 
     @wire(getAccounts)
     wiredAccounts({ error, data }) {
@@ -25,7 +28,16 @@ export default class Scheduler extends LightningElement {
         }
     }
 
-
+    @wire(getTruckList)
+    wiredTruckList({ error, data }) {
+        if (data) {
+            this.truckList = data;
+            this.truckListError = undefined;
+        } else if (error) {
+            this.truckList = [];
+            this.truckListError = error;
+        }
+    }
 
     @track orders = [
         {
