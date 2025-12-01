@@ -75,6 +75,8 @@ public with sharing class Integration {
       return;
     }
 
+    FOPItoUpdate.Truck__c = null;
+    FOPItoUpdate.Delivery_Date__c = null;
     FOPItoUpdate.Status__c = 'Pending';
     update FOPItoUpdate;
   }

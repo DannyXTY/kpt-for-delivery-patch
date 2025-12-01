@@ -7,8 +7,7 @@ import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import getFOPI from '@salesforce/apex/DragDropView.getFOPI';
 
 import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
-import debugRaw from '@salesforce/apex/Integration.debugRaw';
-// import updateFOProductItemToPending from '@salesforce/apex/Integration.updateFOProductItemToPending';
+import updateFOProductItemToPending from '@salesforce/apex/Integration.updateFOProductItemToPending';
 
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -200,7 +199,7 @@ export default class dragAndDropView extends LightningElement {
         if (!orderObj) return;
 
         try {
-            // await updateFOProductItemToPending({ FOPIName: orderObj.name });
+            await updateFOProductItemToPending({ FOPIName: orderObj.name });
 
             const day = this.calendarData.find(d => d.date === date);
             const truck = day.trucks.find(t => t.truckId == truckId);
