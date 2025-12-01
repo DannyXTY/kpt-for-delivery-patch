@@ -7,6 +7,8 @@ import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import getFOPI from '@salesforce/apex/DragDropView.getFOPI';
 
 // import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
+// import updateFOProductItemToPending from '@salesforce/apex/Integration.updateFOProductItemToPending';
+
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
@@ -20,6 +22,17 @@ export default class dragAndDropView extends LightningElement {
     countPendingFulfillments = 0;
     weekStart = "";
     weekEnd = "";
+
+    showModal = false;
+
+    orderColumns = [
+        { label: 'Order Name', fieldName: 'name', type: 'text' },
+        { label: 'Customer', fieldName: 'customer', type: 'text' },
+        { label: 'Product', fieldName: 'productCode', type: 'text' },
+        { label: 'Quantity', fieldName: 'quantity', type: 'number' },
+        { label: 'Weight (kg)', fieldName: 'weight', type: 'number' }
+    ];
+
 
     @track accounts = [];
     @track accountError;
@@ -115,10 +128,10 @@ export default class dragAndDropView extends LightningElement {
 
         const payload = [
             {
-                deliveryDate: orderObj.deliveryDate,
+                deliveryDate: date,
                 trucks: [
                     {
-                        truckId: orderObj.truckId,
+                        truckId: truckId,
                         assignedFOProductItem: [orderObj.name]   // Apex expects Name
                     }
                 ]
@@ -126,6 +139,8 @@ export default class dragAndDropView extends LightningElement {
         ];
 
         try {
+            // await upsertDeliveryInfoFOProductItem({ params: payload });
+
             console.log("Assigned updated in Salesforce:", orderObj.name);
 
             // Clean previous assignments
@@ -146,12 +161,11 @@ export default class dragAndDropView extends LightningElement {
             orderObj.deliveryDate = date;
 
             this.recalcTruckStatuses();
-            showToast("Assigned truck in Salesforce", orderObj.name, "success")
+            this.showToast("Assigned truck in Salesforce", orderObj.name, "success")
 
         } catch (error) {
-            console.error("Apex assign error", err);
-            showToast("Error", err.body?.message || "Failed to assign", "error")
-
+            console.error("Apex assign error", error);
+            this.showToast("Error", error.body?.message || "Failed to assign", "error")
         }
 
 
@@ -182,6 +196,7 @@ export default class dragAndDropView extends LightningElement {
         if (!orderObj) return;
 
         try {
+            // await updateFOProductItemToPending({ FOPIName: orderObj.name });
 
             const day = this.calendarData.find(d => d.date === date);
             const truck = day.trucks.find(t => t.truckId == truckId);
@@ -235,6 +250,13 @@ export default class dragAndDropView extends LightningElement {
         const monday = new Date(base);
         monday.setDate(base.getDate() + mondayOffset);
 
+        this.weekStart = monday.toISOString().slice(0, 10);
+
+        const friday = new Date(monday);
+        friday.setDate(monday.getDate() + 4);
+
+        this.weekEnd = friday.toISOString().slice(0, 10);
+
         const days = [];
 
         for (let i = 0; i < 5; i++) {
@@ -275,7 +297,7 @@ export default class dragAndDropView extends LightningElement {
                 return {
                     id: r.Id,
                     name: r.Name,
-                    customer: r.Customer__c,
+                    customer: r.Fulfillment__r?.Order__r?.Account?.Name || '-',
                     productCode: r.Product__r.ProductCode,
                     productName: r.Product__r.Name,
                     productFamily: r.Product__r.Family,
@@ -285,6 +307,7 @@ export default class dragAndDropView extends LightningElement {
                     truckId: r.Truck__c,
                     deliveryDate: r.Delivery_Date__c,
                     checked: false,
+                    url: '/' + r.Id,
                 };
             });
 
@@ -413,4 +436,31 @@ export default class dragAndDropView extends LightningElement {
         });
         this.dispatchEvent(event);
     }
+
+    get selectedOrders() {
+        return this.orders.filter(o => o.checked);
+    }
+
+    openModal() {
+        if (this.countSelectedCheckbox === 0) {
+            this.showToast("Warning", "No orders selected", "warning");
+            return;
+        }
+        this.showModal = true;
+    }
+
+    closeModal() {
+        this.showModal = false;
+    }
+
+    confirmAISchedule() {
+        // This is where you later call your AI scheduling logic
+        console.log("Selected orders:", this.selectedOrders);
+        console.log("Week:", this.weekStart, this.weekEnd);
+
+        this.showToast("AI Scheduling", "Processing selected orders...", "info");
+
+        this.showModal = false;
+    }
+
 }

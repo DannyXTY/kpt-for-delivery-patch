@@ -44,7 +44,8 @@ public with sharing class DragDropView {
             Name, Quantity__c, Status__c, 
             Total_Weight__c, Unit_Weight__c, Truck__c,
             Product__r.Name, Product__r.ProductCode,
-            Product__r.Family
+            Product__r.Family,
+            Fulfillment__r.Order__r.Account.Name
             FROM Fulfillment_Order_Product_Item__c
             ORDER BY Name
         ];

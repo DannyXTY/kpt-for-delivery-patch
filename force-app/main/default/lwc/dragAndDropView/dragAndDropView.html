@@ -89,7 +89,8 @@
             <div class="orders-panel">
                 <div class="panel-header">
                     <h2>📋 Pending Fulfillments ({countPendingFulfillments})</h2>
-                    <button class="btn btn-success w-100">✨ AI Auto-Schedule Selected ({countSelectedCheckbox})</button>
+                    <button class="btn btn-success w-100" onclick={openModal}>✨ AI Auto-Schedule Selected
+                        ({countSelectedCheckbox})</button>
                     <!-- <button class="btn btn-primary mt-4 w-100">Submit</button> -->
                 </div>
 
@@ -97,12 +98,14 @@
                     <div key={o.id} class="order-card" draggable="true" data-id={o.id} data-name={o.name}
                         ondragstart={handleDragStart}>
                         <div class="header-card">
-                            <div class="order-link">{o.name}</div>
+                            <lightning-formatted-url value={o.url} label={o.name} target="_blank">
+                            </lightning-formatted-url>
                             <input type="checkbox" checked={o.checked} onchange={handleCheckbox} data-name={o.name} />
                         </div>
 
                         <div class="line-card flex justify-between" style="margin-bottom: 5px;">
-                            <span class="label-card">Customer:</span> {o.customer}
+                            <span class="label-card">Customer:</span> <span class="truncate">{o.customer}</span>
+                            <lightning-helptext content={o.customer}></lightning-helptext>
                         </div>
                         <div class="line-card flex justify-between">
                             <span class="label-card">Product:</span>
@@ -178,4 +181,42 @@
         </div>
 
     </div>
+
+    <!-- MODAL: AI Auto-Schedule -->
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header">
+                    <h2 class="slds-modal__title">AI Auto-Schedule Preview</h2>
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p><strong>Week:</strong> {weekStart} to {weekEnd}</p>
+
+                    <h3 class="slds-m-top_medium">Selected Orders</h3>
+
+
+                    <lightning-datatable key-field="id" data={selectedOrders} columns={orderColumns}
+                        hide-checkbox-column="true" class="slds-m-top_small">
+                    </lightning-datatable>
+
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeModal}>Cancel</button>
+                    <button class="slds-button slds-button_brand" onclick={confirmAISchedule}>
+                        Confirm Auto-Schedule
+                    </button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
 </template>
