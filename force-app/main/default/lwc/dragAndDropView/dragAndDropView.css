@@ -391,3 +391,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.slds-modal__container {
+    max-width: 50rem;
+}
