@@ -10,7 +10,21 @@ public with sharing class Integration {
     }
   }
 
-  public static void upsertDeliveryInfoFOProductItem(List<dtoUpsertDeliveryInfoFOProductItem> params) {
+  @AuraEnabled
+  public static void upsertDeliveryInfoFOProductItem(String paramsJson) {
+    System.debug('params logs from Danny test here');
+    System.debug(paramsJson);
+      
+      List<dtoUpsertDeliveryInfoFOProductItem> params =
+    (List<dtoUpsertDeliveryInfoFOProductItem>) JSON.deserialize(
+        paramsJson,
+        List<dtoUpsertDeliveryInfoFOProductItem>.class
+    );
+
+    System.debug('setelah di deseralize');
+    System.debug(params);
+    
+      
       Map<String, TruckDateInfo> productItemToTruckDateMap = new Map<String, TruckDateInfo>();
 
       for (dtoUpsertDeliveryInfoFOProductItem param : params) {
@@ -21,17 +35,18 @@ public with sharing class Integration {
         }
       }
 
-      Set<String> productItemNames = productItemToTruckDateMap.keySet();
+
+      Set<String> productItemIds = productItemToTruckDateMap.keySet();
 
       List<Fulfillment_Order_Product_Item__c> foProductItems = [
         SELECT
         Id, Name
         FROM Fulfillment_Order_Product_Item__c
-        WHERE Name in :productItemNames
+        WHERE Id IN :productItemIds
       ];
 
       for (Fulfillment_Order_Product_Item__c foProductItem : foProductItems) {
-        TruckDateInfo truckDateInfo = productItemToTruckDateMap.get(foProductItem.Name);
+        TruckDateInfo truckDateInfo = productItemToTruckDateMap.get(foProductItem.Id);
         
         if (truckDateInfo == null) {
             continue;
@@ -39,10 +54,31 @@ public with sharing class Integration {
 
         foProductItem.Truck__c = truckDateInfo.truckId;
         foProductItem.Delivery_Date__c = Date.valueOf(truckDateInfo.deliveryDate);
+        foProductItem.Status__c = 'Assigned';
       }
 
       if (!foProductItems.isEmpty()) {
         update foProductItems;
       }
   }
+
+  public static void updateFOProductItemToPending(String FOPIName) {
+    if (String.isBlank(FOPIName)) {
+      return;
+    }
+
+    Fulfillment_Order_Product_Item__c FOPItoUpdate = [
+      SELECT Id, Name, Status__c FROM Fulfillment_Order_Product_Item__c WHERE Name = :FOPIName LIMIT 1
+    ];
+
+    if (FOPIName == null) {
+      return;
+    }
+
+    FOPItoUpdate.Status__c = 'Pending';
+    update FOPItoUpdate;
+  }
+  
+     
+  
 }
