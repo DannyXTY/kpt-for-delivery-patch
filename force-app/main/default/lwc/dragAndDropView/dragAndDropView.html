@@ -221,5 +221,11 @@
 
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
+    <template if:true={showFlow}>
+        <lightning-flow flow-api-name={flowName} flow-input-variables={inputVariables}
+            onstatuschange={handleFlowStatus}>
+        </lightning-flow>
+    </template>
+
 
 </template>
