@@ -149,7 +149,7 @@
 /* ---------------- LEFT PANEL ---------------- */
 
 .orders-panel {
-    width: 280px;
+    width: 20rem;
     background: #fafafa;
     border-right: 1px solid #e0e0e0;
     padding: 10px;
@@ -210,11 +210,13 @@
     gap: 12px;
     overflow-x: auto;
     flex-grow: 1;
+    width: 100%;
 }
 
 .day-column {
-    width: 260px;
-    min-width: 260px;
+    /* width: 260px; */
+    flex: 1;
+    min-width: 0;
     background: #ffffff;
     border: 1px solid #e0e0e0;
     border-radius: 10px;
@@ -229,12 +231,12 @@
 }
 
 .day-name {
-    font-size: 14px;
+    font-size: 0.75rem;
     font-weight: bold;
 }
 
 .day-date {
-    font-size: 12px;
+    font-size: 1rem;
     color: #666;
 }
 
@@ -339,11 +341,12 @@
 }
 
 .truck-capacity {
-    padding: 4px 10px;
+    padding: 6px 6px;
     border-radius: 12px;
     white-space: nowrap;
     display: inline-block;
     flex-shrink: 0;
+    font-size: 0.5rem;
 
 }
 
