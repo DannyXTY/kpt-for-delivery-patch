@@ -15,7 +15,7 @@ import updateFOProductItemToPending from '@salesforce/apex/Integration.updateFOP
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 
-export default class dragAndDropView extends LightningElement {
+export default class dragAndDropView extends NavigationMixin(LightningElement) {
     draggedOrderId = null;
 
     countSelectedCheckbox = 0;
@@ -488,17 +488,22 @@ export default class dragAndDropView extends LightningElement {
     }
 
     navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderProductItemIdList) {
-        this[NavigationMixin.Navigate]({
-            type: "standard__flow",
-            attributes: {
-                flowApiName: "Delivery_Dispatch_AI_Scheduling"
-            },
-            state: {
-                weekStartDate,
-                weekEndDate,
-                fulfillmentOrderProductItemIdList
-            }
-        });
+        try {
+
+            this[NavigationMixin.Navigate]({
+                type: "standard__flow",
+                attributes: {
+                    flowApiName: "Delivery_Dispatch_AI_Scheduling"
+                },
+                state: {
+                    weekStartDate,
+                    weekEndDate,
+                    fulfillmentOrderProductItemIdList
+                }
+            });
+        } catch (error) {
+            console.error(error)
+        }
     }
 
 
