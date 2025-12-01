@@ -6,7 +6,7 @@ import getFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getFu
 import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import getFOPI from '@salesforce/apex/DragDropView.getFOPI';
 
-import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
+// import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
@@ -164,6 +164,9 @@ export default class dragAndDropView extends LightningElement {
         order.checked = event.target.checked;
 
         if (order.checked) {
+            // process to AI scheduling
+
+
             this.countSelectedCheckbox++;
         } else {
             this.countSelectedCheckbox--;
