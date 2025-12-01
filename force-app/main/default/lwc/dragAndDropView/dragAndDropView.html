@@ -151,7 +151,10 @@
                                     <template for:each={t.assignedOrders} for:item="ord">
                                         <div key={ord} class="assigned-order">
                                             <div class="flex justify-between">
-                                                {ord.name}
+                                                <a href={ord.url} target="_blank" class="white-url">
+                                                    {ord.name}
+                                                </a>
+
                                                 <button class="remove-btn" data-id={ord.id} data-truck-id={t.truckId}
                                                     data-date={day.date} onclick={handleRemove}>
                                                     ✕

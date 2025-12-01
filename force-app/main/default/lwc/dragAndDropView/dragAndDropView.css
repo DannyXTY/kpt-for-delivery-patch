@@ -395,3 +395,14 @@
 .slds-modal__container {
     max-width: 50rem;
 }
+
+.white-url {
+    color: white !important;
+    text-decoration: underline;
+    /* optional */
+}
+
+.white-url:hover {
+    color: #dcdcdc;
+    /* optional */
+}
