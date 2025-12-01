@@ -6,7 +6,8 @@ import getFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getFu
 import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import getFOPI from '@salesforce/apex/DragDropView.getFOPI';
 
-// import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
+import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
+import debugRaw from '@salesforce/apex/Integration.debugRaw';
 // import updateFOProductItemToPending from '@salesforce/apex/Integration.updateFOProductItemToPending';
 
 
@@ -132,14 +133,17 @@ export default class dragAndDropView extends LightningElement {
                 trucks: [
                     {
                         truckId: truckId,
-                        assignedFOProductItem: [orderObj.name]   // Apex expects Name
+                        assignedFOProductItem: [orderObj.id]   // Apex expects Name
                     }
                 ]
             }
         ];
 
         try {
-            // await upsertDeliveryInfoFOProductItem({ params: payload });
+            console.log("payload")
+            console.log(JSON.stringify(payload))
+
+            await upsertDeliveryInfoFOProductItem({ params: JSON.stringify(payload) });
 
             console.log("Assigned updated in Salesforce:", orderObj.name);
 
