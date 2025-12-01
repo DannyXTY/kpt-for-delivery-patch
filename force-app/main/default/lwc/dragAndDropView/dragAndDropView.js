@@ -6,8 +6,7 @@ import getFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getFu
 import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import getFOPI from '@salesforce/apex/DragDropView.getFOPI';
 
-// import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
-// import updateFOProductItemToPending from '@salesforce/apex/Integration.updateFOProductItemToPending';
+import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
@@ -127,7 +126,6 @@ export default class dragAndDropView extends LightningElement {
         ];
 
         try {
-            // await upsertDeliveryInfoFOProductItem({ params: payload });
             console.log("Assigned updated in Salesforce:", orderObj.name);
 
             // Clean previous assignments
@@ -181,7 +179,6 @@ export default class dragAndDropView extends LightningElement {
         if (!orderObj) return;
 
         try {
-            // await updateFOProductItemToPending({ FOPIName: orderObj.name });
 
             const day = this.calendarData.find(d => d.date === date);
             const truck = day.trucks.find(t => t.truckId == truckId);
