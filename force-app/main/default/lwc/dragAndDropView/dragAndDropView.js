@@ -5,9 +5,11 @@ import getAssignedFulfillmentOrderProductItems from '@salesforce/apex/DragDropVi
 import getFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getFulfillmentOrderProductItems';
 import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import getFOPI from '@salesforce/apex/DragDropView.getFOPI';
+import { NavigationMixin } from 'lightning/navigation';
 
-// import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
-// import updateFOProductItemToPending from '@salesforce/apex/Integration.updateFOProductItemToPending';
+import upsertDeliveryInfoFOProductItem from '@salesforce/apex/Integration.upsertDeliveryInfoFOProductItem';
+// import debugRaw from '@salesforce/apex/Integration.debugRaw';
+import updateFOProductItemToPending from '@salesforce/apex/Integration.updateFOProductItemToPending';
 
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -132,14 +134,18 @@ export default class dragAndDropView extends LightningElement {
                 trucks: [
                     {
                         truckId: truckId,
-                        assignedFOProductItem: [orderObj.name]   // Apex expects Name
+                        assignedFOProductItem: [orderObj.id]   // Apex expects Name
                     }
                 ]
             }
         ];
 
         try {
-            // await upsertDeliveryInfoFOProductItem({ params: payload });
+            console.log("payload")
+            console.log(JSON.stringify(payload))
+
+            await upsertDeliveryInfoFOProductItem({ paramsJson: JSON.stringify(payload) });
+            // await debugRaw({ paramsJson: JSON.stringify(payload) });
 
             console.log("Assigned updated in Salesforce:", orderObj.name);
 
@@ -196,7 +202,7 @@ export default class dragAndDropView extends LightningElement {
         if (!orderObj) return;
 
         try {
-            // await updateFOProductItemToPending({ FOPIName: orderObj.name });
+            await updateFOProductItemToPending({ FOPIName: orderObj.name });
 
             const day = this.calendarData.find(d => d.date === date);
             const truck = day.trucks.find(t => t.truckId == truckId);
@@ -458,9 +464,42 @@ export default class dragAndDropView extends LightningElement {
         console.log("Selected orders:", this.selectedOrders);
         console.log("Week:", this.weekStart, this.weekEnd);
 
+        const weekStartDate = this.formatToDDMMYYYY(this.weekStart);
+        const weekEndDate = this.formatToDDMMYYYY(this.weekEnd);
+        const fulfillmentOrderProductItemIdList = this.selectedOrders
+            .map(o => o.id) // or o.fulfillmentOrderProductItemId (your real field)
+            .join(",");
+        console.log("weekStartDate:", weekStartDate);
+        console.log("weekEndDate:", weekEndDate);
+        console.log("fulfillmentOrderProductItemIdList:", fulfillmentOrderProductItemIdList);
+
+
         this.showToast("AI Scheduling", "Processing selected orders...", "info");
 
         this.showModal = false;
+
+        this.navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderProductItemIdList);
+
     }
+
+    formatToDDMMYYYY(iso) {
+        const [y, m, d] = iso.split("-");
+        return `${d}/${m}/${y}`;
+    }
+
+    navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderProductItemIdList) {
+        this[NavigationMixin.Navigate]({
+            type: "standard__flow",
+            attributes: {
+                flowApiName: "Delivery_Dispatch_AI_Scheduling"
+            },
+            state: {
+                weekStartDate,
+                weekEndDate,
+                fulfillmentOrderProductItemIdList
+            }
+        });
+    }
+
 
 }
