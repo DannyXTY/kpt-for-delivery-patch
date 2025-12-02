@@ -495,7 +495,7 @@ export default class dragAndDropView extends NavigationMixin(LightningElement) {
         this.flowInputs = [
             { name: "weekStartDate", type: "String", value: weekStartDate },
             { name: "weekEndDate", type: "String", value: weekEndDate },
-            { name: "fulfillmentOrderProductItemIdList", type: "String", value: fulfillmentOrderProductItemIdList }
+            { name: "fulfillmentOrderProductItemList", type: "String", value: fulfillmentOrderProductItemIdList }
         ];
 
         this.showFlow = true;
@@ -503,6 +503,8 @@ export default class dragAndDropView extends NavigationMixin(LightningElement) {
     }
 
     handleFlowStatus(event) {
+        console.log("Flow status:", event.detail.status);
+
         if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
             this.showFlow = false;
             this.showToast("Success", "AI Scheduling completed", "success");
