@@ -27,6 +27,10 @@ export default class dragAndDropView extends NavigationMixin(LightningElement) {
 
     showModal = false;
 
+    flowName = "Delivery_Dispatch_AI_Scheduling";
+    showFlow = false;
+    flowInputs = [];
+
     orderColumns = [
         { label: 'Order Name', fieldName: 'name', type: 'text' },
         { label: 'Customer', fieldName: 'customer', type: 'text' },
@@ -488,23 +492,29 @@ export default class dragAndDropView extends NavigationMixin(LightningElement) {
     }
 
     navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderProductItemIdList) {
-        try {
+        this.flowInputs = [
+            { name: "weekStartDate", type: "String", value: weekStartDate },
+            { name: "weekEndDate", type: "String", value: weekEndDate },
+            { name: "fulfillmentOrderProductItemList", type: "String", value: fulfillmentOrderProductItemIdList }
+        ];
 
-            this[NavigationMixin.Navigate]({
-                type: "standard__flow",
-                attributes: {
-                    flowApiName: "Delivery_Dispatch_AI_Scheduling"
-                },
-                state: {
-                    weekStartDate,
-                    weekEndDate,
-                    fulfillmentOrderProductItemIdList
-                }
-            });
-        } catch (error) {
-            console.error(error)
+        this.showFlow = true;
+
+    }
+
+    handleFlowStatus(event) {
+        console.log("Flow status:", event.detail.status);
+
+        if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
+            this.showFlow = false;
+            this.showToast("Success", "AI Scheduling completed", "success");
         }
     }
+
+    get inputVariables() {
+        return this.flowInputs;
+    }
+
 
 
 }
