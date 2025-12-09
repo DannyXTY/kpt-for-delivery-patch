@@ -279,12 +279,38 @@
     gap: 6px;
 }
 
+.draft-order {
+    background: #fc5b5b;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+}
+
 .assigned-order {
     background: #0070d2;
     color: white;
     border-radius: 6px;
     padding: 6px 8px;
     font-size: 12px;
+}
+
+.confirmed-order {
+    background: #2e844a;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+
+}
+
+.allocated-order {
+    background: #18619c;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+
 }
 
 .remove-btn {

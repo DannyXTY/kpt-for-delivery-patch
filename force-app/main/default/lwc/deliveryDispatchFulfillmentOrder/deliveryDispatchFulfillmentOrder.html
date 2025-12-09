@@ -4,7 +4,7 @@
         <div class="app-header">
             <h1>🚚 Delivery Planning Dashboard</h1>
             <div class="header-actions">
-                <button class="btn btn-secondary"><span>↻</span>Refresh</button>
+                <button class="btn btn-secondary" onclick={handleRefresh}><span>↻</span>Refresh</button>
                 <button class="btn btn-secondary"><span>📊</span>Reports</button>
                 <button class="btn btn-secondary"><span>⚙️</span>Settings</button>
             </div>
@@ -20,32 +20,17 @@
                         <option key={acc.Id}>{acc.Name}</option>
                     </template>
                 </select>
-                <label>Product Family:</label>
-                <select>
-                    <option value="all">All Products</option>
-                    <option value="Disc Plow (บุกเบิก)">Disc Plow (บุกเบิก)</option>
-                    <option value="Disc Harrow (ผานพรวน)">Disc Harrow (ผานพรวน)</option>
-                    <option value="Furrow Disc (คัดท้าย)">Furrow Disc (คัดท้าย)</option>
-                    <option value="Notch Disc (ใบจักร)">Notch Disc (ใบจักร)</option>
-                    <option value="Rotary Blade (โรตารี่)">Rotary Blade (โรตารี่)</option>
-                    <option value="Dozer Blade (ใบดันดิน)">Dozer Blade (ใบดันดิน)</option>
-                    <option value="Screw Flight (ใบเกลียว)">Screw Flight (ใบเกลียว)</option>
-                    <option value="Implements (อุปกรณ์ต่อพ่วง)">Implements (อุปกรณ์ต่อพ่วง)</option>
-                    <option value="etc. (อื่น ๆ)">etc. (อื่น ๆ)</option>
-                </select>
-
                 <label>Week</label>
-                <lightning-input type="date" label="" value={selectedDate} onchange={handleDateChange}
-                    placeholder="YYYY-MM-DD">
-                </lightning-input>
+                <input type="date" value={selectedDate} oninput={handleDateChange}>
+
 
 
             </div>
             <!-- stats section part -->
             <div class="stats-section right-side">
                 <div class=" stat-item">
-                    <div class="stat-value">{countPendingFulfillments}</div>
-                    <div class="stat-label">Pending</div>
+                    <div class="stat-value">{countDraftFulfillments}</div>
+                    <div class="stat-label">Draft</div>
 
                 </div>
                 <div class=" stat-item">
@@ -65,8 +50,20 @@
         <!-- Marker Capacity -->
         <div class="legend">
             <div class="legend-item">
+                <div class="legend-color" style="background: #fc5b5b;"></div>
+                <span>Draft</span>
+            </div>
+            <div class="legend-item">
                 <div class="legend-color" style="background: #0176d3;"></div>
-                <span>Scheduled</span>
+                <span>Assigned</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #2e844a;"></div>
+                <span>Confirmed</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #18619c;"></div>
+                <span>Allocated</span>
             </div>
             <div class="legend-item">
                 <div class="legend-color" style="background: #2e844a;"></div>
@@ -88,7 +85,7 @@
             <!-- LEFT SIDE - ORDERS -->
             <div class="orders-panel">
                 <div class="panel-header">
-                    <h2>📋 Pending Fulfillments ({countPendingFulfillments})</h2>
+                    <h2>📋 Pending Fulfillments ({countDraftFulfillments})</h2>
                     <button class="btn btn-success w-100" onclick={openModal}>✨ AI Auto-Schedule Selected
                         ({countSelectedCheckbox})</button>
                     <!-- <button class="btn btn-primary mt-4 w-100">Submit</button> -->
@@ -121,7 +118,7 @@
                             </template>
                         </div>
 
-                        
+
                     </div>
                 </template>
             </div>
@@ -150,7 +147,7 @@
 
                                 <div class="truck-orders">
                                     <template for:each={t.assignedOrders} for:item="ord">
-                                        <div key={ord} class="assigned-order">
+                                        <div key={ord} class={ord.cssClass}>
                                             <div class="flex justify-between">
                                                 <a href={ord.url} target="_blank" class="white-url">
                                                     {ord.name}
