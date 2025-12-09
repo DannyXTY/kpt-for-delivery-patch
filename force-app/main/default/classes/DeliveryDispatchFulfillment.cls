@@ -18,6 +18,8 @@ public with sharing class DeliveryDispatchFulfillment {
             Order__c, Total_Weight__c, Truck__c,
             Customer_No__c, CurrencyIsoCode,
             Order__r.Account.Name,
+            Order__r.Id,
+            Order__r.OrderNumber,
             (
                 SELECT 
                 Id, Name, Quantity__c, Product_Code__c, 
