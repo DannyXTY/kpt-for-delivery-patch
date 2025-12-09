@@ -1,0 +1,232 @@
+<template>
+    <div class="dragDropId">
+        <!-- Header -->
+        <div class="app-header">
+            <h1>🚚 Delivery Planning Dashboard</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary"><span>↻</span>Refresh</button>
+                <button class="btn btn-secondary"><span>📊</span>Reports</button>
+                <button class="btn btn-secondary"><span>⚙️</span>Settings</button>
+            </div>
+        </div>
+
+        <!-- Toolbar for main page -->
+        <div class="toolbar">
+            <div class="filter-section left-side">
+                <label>Customer:</label>
+                <select name="customer" onchange={handleCustomerChange}>
+                    <option value="all">All Customers</option>
+                    <template for:each={accounts} for:item="acc">
+                        <option key={acc.Id}>{acc.Name}</option>
+                    </template>
+                </select>
+                <label>Product Family:</label>
+                <select>
+                    <option value="all">All Products</option>
+                    <option value="Disc Plow (บุกเบิก)">Disc Plow (บุกเบิก)</option>
+                    <option value="Disc Harrow (ผานพรวน)">Disc Harrow (ผานพรวน)</option>
+                    <option value="Furrow Disc (คัดท้าย)">Furrow Disc (คัดท้าย)</option>
+                    <option value="Notch Disc (ใบจักร)">Notch Disc (ใบจักร)</option>
+                    <option value="Rotary Blade (โรตารี่)">Rotary Blade (โรตารี่)</option>
+                    <option value="Dozer Blade (ใบดันดิน)">Dozer Blade (ใบดันดิน)</option>
+                    <option value="Screw Flight (ใบเกลียว)">Screw Flight (ใบเกลียว)</option>
+                    <option value="Implements (อุปกรณ์ต่อพ่วง)">Implements (อุปกรณ์ต่อพ่วง)</option>
+                    <option value="etc. (อื่น ๆ)">etc. (อื่น ๆ)</option>
+                </select>
+
+                <label>Week</label>
+                <lightning-input type="date" label="" value={selectedDate} onchange={handleDateChange}
+                    placeholder="YYYY-MM-DD">
+                </lightning-input>
+
+
+            </div>
+            <!-- stats section part -->
+            <div class="stats-section right-side">
+                <div class=" stat-item">
+                    <div class="stat-value">{countPendingFulfillments}</div>
+                    <div class="stat-label">Pending</div>
+
+                </div>
+                <div class=" stat-item">
+                    <div class="stat-value">{countAssignedFulfillments}</div>
+                    <div class="stat-label">Scheduled</div>
+                </div>
+                <!-- 
+                    <div class=" stat-item">
+                        <div class="stat-value">87%</div>
+                        <div class="stat-label">Utilization</div>
+                    </div>
+                -->
+            </div>
+
+        </div>
+
+        <!-- Marker Capacity -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #0176d3;"></div>
+                <span>Scheduled</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #2e844a;"></div>
+                <span>Under Capacity</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffa500;"></div>
+                <span>Near Capacity</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #c23934;"></div>
+                <span>At Capacity</span>
+            </div>
+        </div>
+
+
+        <div class="scheduler-container">
+
+            <!-- LEFT SIDE - ORDERS -->
+            <div class="orders-panel">
+                <div class="panel-header">
+                    <h2>📋 Pending Fulfillments ({countPendingFulfillments})</h2>
+                    <button class="btn btn-success w-100" onclick={openModal}>✨ AI Auto-Schedule Selected
+                        ({countSelectedCheckbox})</button>
+                    <!-- <button class="btn btn-primary mt-4 w-100">Submit</button> -->
+                </div>
+
+                <template for:each={draftOrders} for:item="o">
+                    <div key={o.id} class="order-card" draggable="true" data-id={o.id} data-name={o.name}
+                        ondragstart={handleDragStart}>
+                        <div class="header-card">
+                            <lightning-formatted-url value={o.url} label={o.name} target="_blank">
+                            </lightning-formatted-url>
+                            <input type="checkbox" checked={o.checked} onchange={handleCheckbox} data-name={o.name} />
+                        </div>
+
+                        <div class="line-card flex justify-between" style="margin-bottom: 5px;">
+                            <span class="label-card">Customer:</span> <span class="truncate">{o.customer}</span>
+                            <lightning-helptext content={o.customer}></lightning-helptext>
+                        </div>
+                        <div class="separator"></div>
+                        <div class="line-card flex flex-col justify-between">
+                            <template for:each={o.products} for:item="item">
+                                <div key={item.Id} class="mt-2">
+                                    <div class="flex flex-row justify-between w-100">
+                                        <span>ProductCode: {item.Product_Code__c}</span>
+                                        <span>Quantity: {item.Quantity__c}</span>
+                                        <lightning-helptext content={o.Product_Code__c}></lightning-helptext>
+                                    </div>
+                                    <div class="order-weight">{item.Total_Weight__c} kg</div>
+                                </div>
+                            </template>
+                        </div>
+
+                        
+                    </div>
+                </template>
+            </div>
+
+            <!-- RIGHT SIDE - CALENDAR -->
+            <div class="calendar-panel">
+                <template for:each={calendarData} for:item="day">
+                    <div key={day.date} class="day-column">
+
+                        <div class="day-header">
+                            <div class="day-name">{day.dayName}</div>
+                            <div class="day-date">{day.date}</div>
+                        </div>
+
+                        <template for:each={day.trucks} for:item="t">
+                            <div key={t.truckId} class="truck-card" data-truck-id={t.truckId} data-date={day.date}
+                                ondragover={handleDragOver} ondrop={handleDrop}>
+
+                                <div class="truck-header">
+                                    <div>
+                                        <div class="truck-name truncate">{t.truckName} </div>
+                                        <lightning-helptext content={t.tooltip}></lightning-helptext>
+                                    </div>
+                                    <div class={t.statusClass}>{t.remainingCapacity} kg</div>
+                                </div>
+
+                                <div class="truck-orders">
+                                    <template for:each={t.assignedOrders} for:item="ord">
+                                        <div key={ord} class="assigned-order">
+                                            <div class="flex justify-between">
+                                                <a href={ord.url} target="_blank" class="white-url">
+                                                    {ord.name}
+                                                </a>
+
+                                                <button class="remove-btn" data-id={ord.id} data-truck-id={t.truckId}
+                                                    data-date={day.date} onclick={handleRemove}>
+                                                    ✕
+                                                </button>
+                                            </div>
+                                            <div class="">
+                                                <label>{ord.productCode} - {ord.quantity} pcs</label>
+                                            </div>
+                                            <div class="">
+                                                <label>{ord.weight} kg</label>
+                                            </div>
+
+                                        </div>
+                                    </template>
+
+                                    <template if:true={t.isEmpty}>
+                                        <div class="empty-hint">Drop orders here</div>
+                                    </template>
+                                </div>
+
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MODAL: AI Auto-Schedule -->
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header">
+                    <h2 class="slds-modal__title">AI Auto-Schedule Preview</h2>
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium">
+                    <p><strong>Week:</strong> {weekStart} to {weekEnd}</p>
+
+                    <h3 class="slds-m-top_medium">Selected Orders</h3>
+
+
+                    <lightning-datatable key-field="id" data={selectedOrders} columns={orderColumns}
+                        hide-checkbox-column="true" class="slds-m-top_small">
+                    </lightning-datatable>
+
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeModal}>Cancel</button>
+                    <button class="slds-button slds-button_brand" onclick={confirmAISchedule}>
+                        Confirm Auto-Schedule
+                    </button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+    <template if:true={showFlow}>
+        <lightning-flow flow-api-name={flowName} flow-input-variables={inputVariables}
+            onstatuschange={handleFlowStatus}>
+        </lightning-flow>
+    </template>
+
+
+</template>
