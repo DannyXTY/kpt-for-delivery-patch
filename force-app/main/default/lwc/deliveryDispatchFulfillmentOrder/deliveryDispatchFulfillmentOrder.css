@@ -1,0 +1,500 @@
+/* Main App */
+
+.dragDropId {
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    background: #f3f3f3;
+    color: #181818;
+}
+
+/* Main App */
+.app-header {
+    background: white;
+    padding: 20px 30px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.app-header h1 {
+    font-size: 24px;
+    font-weight: 400;
+    color: #080707;
+}
+
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-secondary {
+    background: white;
+    color: #0176d3;
+    border: 1px solid #0176d3;
+}
+
+.btn-success {
+    background: #2e844a;
+    color: white;
+}
+
+.btn-primary {
+    color: white;
+    background: #0d6efd;
+}
+
+/* Toolbar Section */
+.toolbar {
+    background: white;
+    padding: 15px 30px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.filter-section {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.filter-section label {
+    font-size: 13px;
+    color: #3e3e3c;
+    font-weight: 600;
+}
+
+.filter-section select,
+.filter-section input {
+    padding: 8px 12px;
+    border: 1px solid #c9c9c9;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.stats-section {
+    display: flex;
+    gap: 30px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #0176d3;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #706e6b;
+    margin-top: 4px;
+}
+
+/* Legend part */
+.legend {
+    display: flex;
+    gap: 20px;
+    padding: 15px 30px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #3e3e3c;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
+
+
+
+
+
+
+.scheduler-container {
+    display: flex;
+    gap: 16px;
+    height: 100%;
+    padding: 12px;
+}
+
+/* ---------------- LEFT PANEL ---------------- */
+
+.orders-panel {
+    width: 20rem;
+    background: #fafafa;
+    border-right: 1px solid #e0e0e0;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+
+.mt-4 {
+    margin-top: 1rem;
+}
+
+.mt-2 {
+    margin-top: 0.5rem;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.separator {
+    border-bottom: 1px solid #ddd;
+    margin: 4px 0;
+}
+
+.panel-header {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    background: #fafaf9;
+}
+
+.panel-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #3e3e3c;
+}
+
+.order-card {
+    background: white;
+    border: 1px solid #dcdcdc;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    cursor: grab;
+    transition: box-shadow 0.15s;
+}
+
+.order-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.order-id {
+    font-weight: bold;
+}
+
+.order-info {
+    font-size: 12px;
+    color: #666;
+}
+
+
+/* ---------------- RIGHT PANEL ---------------- */
+
+.calendar-panel {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    flex-grow: 1;
+    width: 100%;
+}
+
+.day-column {
+    /* width: 260px; */
+    flex: 1;
+    min-width: 0;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.day-header {
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 12px;
+}
+
+.day-name {
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.day-date {
+    font-size: 1rem;
+    color: #666;
+}
+
+/* ---------------- TRUCK BOXES ---------------- */
+
+.truck-card {
+    background: #f9f9f9;
+    border: 2px dashed #cccccc;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 14px;
+    min-height: 120px;
+    transition: border 0.2s;
+}
+
+.truck-card:hover {
+    border-color: #0070d2;
+}
+
+.truck-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: bold;
+    align-items: center;
+}
+
+.truck-orders {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.draft-order {
+    background: #fc5b5b;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+}
+
+.assigned-order {
+    background: #0070d2;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+}
+
+.confirmed-order {
+    background: #2e844a;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+
+}
+
+.allocated-order {
+    background: #18619c;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+
+}
+
+.remove-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 4px;
+    font-size: 14px;
+}
+
+.remove-btn:hover {
+    color: #ffcccc;
+}
+
+
+.empty-hint {
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    padding: 12px 0;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-row {
+    flex-direction: row;
+}
+
+.flex-col {
+    flex-direction: column;
+}
+
+.justify-between {
+    justify-content: space-between;
+}
+
+.weight-badge {
+    display: inline-block;
+    background: #f3f3f3;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #3e3e3c;
+    margin-top: 8px;
+}
+
+.weight-badge .under-capacity,
+.under-capacity {
+    background: #2e844a;
+    color: white;
+}
+
+.weight-badge .near-capacity,
+.near-capacity {
+    background: #ffa500;
+    color: white;
+}
+
+.weight-badge .at-capacity,
+.at-capacity {
+    background: #c23934;
+    color: white;
+}
+
+.truck-capacity {
+    padding: 6px 6px;
+    border-radius: 12px;
+    white-space: nowrap;
+    display: inline-block;
+    flex-shrink: 0;
+    font-size: 0.3rem;
+    line-height: 1rem;
+
+}
+
+.truck-name {
+    padding: 4px 0px;
+    font-size: 0.3rem;
+}
+
+.header-card {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.order-link {
+    font-weight: 700;
+    color: #0b66c3;
+}
+
+.line-card {
+    margin: 2px 0;
+}
+
+.label-card {
+    font-weight: 600;
+}
+
+.order-weight {
+    margin-top: 10px;
+    background: #d3d3d3;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    color: #000000;
+    display: inline-block;
+}
+
+.truncate {
+    display: inline-block;
+    max-width: 120px;
+    /* adjust based on your card width */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.slds-modal__container {
+    max-width: 50rem;
+}
+
+.white-url {
+    color: white !important;
+    text-decoration: underline;
+    /* optional */
+}
+
+.white-url:hover {
+    color: #dcdcdc;
+    /* optional */
+}
+
+.truncate {
+    display: inline-block;
+    max-width: 30px;
+    /* adjust based on your card width */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+}
+
+/* Tablet */
+@media (min-width: 600px) {
+    .truncate {
+        max-width: 40px;
+    }
+
+    .truck-capacity {
+        font-size: 0.5rem;
+
+    }
+
+    .truck-name {
+        font-size: 0.5rem;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .truncate {
+        max-width: 60px;
+    }
+
+    .truck-capacity {
+        font-size: 0.75rem;
+
+    }
+
+    .truck-name {
+        font-size: 0.75rem;
+    }
+}
+
+/* Large desktop */
+@media (min-width: 1440px) {
+    .truncate {
+        max-width: 800px;
+    }
+
+}

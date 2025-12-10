@@ -6,10 +6,10 @@ public with sharing class DragDropView {
     @AuraEnabled(cacheable=true)
     public static List<Account> getAccounts() {
         return [
-            SELECT Id, Name, Industry, Phone
+            SELECT Id, Name, Industry, Phone, Abbreviation__c
             FROM Account
             ORDER BY Name
-            LIMIT 2000
+            LIMIT 9999
         ];
     }
 

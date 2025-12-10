@@ -1,0 +1,13 @@
+<template>
+    <lightning-button label="Start Flow" onclick={handleStartFlow}></lightning-button>
+
+    <template if:true={showFlow}>
+        <lightning-card title="Screen Flow Testing">
+            <lightning-flow flow-api-name="Label_Testing_Screen_Flow" flow-input-variables={inputVariables}
+                onstatuschange={handleStatusChange}>
+            </lightning-flow>
+        </lightning-card>
+    </template>
+
+
+</template>
