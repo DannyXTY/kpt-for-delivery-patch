@@ -22,6 +22,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     selectedDate = new Date();
     selectedCustomer = 'all';
     countDraftFulfillments = 0;
+    countPendingFulfillments = 0;
     countAssignedFulfillments = 0;
     countConfirmedFulfillments = 0;
     countAllocatedFulfillments = 0;
@@ -312,6 +313,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
             console.log(this.orders)
 
             this.countDraftFulfillments = this.orders.filter((o) => o.status === 'Draft').length;
+            this.countPendingFulfillments = this.orders.filter((o) => o.status === 'Pending').length;
             this.countAssignedFulfillments = this.orders.filter((o) => o.status === 'Assigned').length;
             this.countConfirmedFulfillments = this.orders.filter((o) => o.status === 'Confirmed').length;
             this.countAllocatedFulfillments = this.orders.filter((o) => o.status === 'Allocated').length;
@@ -365,6 +367,13 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
             this.rebuildAssignedOrdersIntoCalendar();
             this.recalcTruckStatuses();
+
+            this.countDraftFulfillments = this.orders.filter((o) => o.status === 'Draft').length;
+            this.countPendingFulfillments = this.orders.filter((o) => o.status === 'Pending').length;
+            this.countAssignedFulfillments = this.orders.filter((o) => o.status === 'Assigned').length;
+            this.countConfirmedFulfillments = this.orders.filter((o) => o.status === 'Confirmed').length;
+            this.countAllocatedFulfillments = this.orders.filter((o) => o.status === 'Allocated').length;
+
         } catch (e) {
             console.error('Filter error', e);
         }
