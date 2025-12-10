@@ -527,19 +527,19 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
         const weekStartDate = this.formatToDDMMYYYY(this.weekStart);
         const weekEndDate = this.formatToDDMMYYYY(this.weekEnd);
-        const fulfillmentOrderProductItemIdList = this.selectedOrders
+        const fulfillmentOrderIdList = this.selectedOrders
             .map(o => o.id) // or o.fulfillmentOrderProductItemId (your real field)
             .join(",");
         console.log("weekStartDate:", weekStartDate);
         console.log("weekEndDate:", weekEndDate);
-        console.log("fulfillmentOrderProductItemIdList:", fulfillmentOrderProductItemIdList);
+        console.log("fulfillmentOrderIdList:", fulfillmentOrderIdList);
 
 
         this.showToast("AI Scheduling", "Processing selected orders...", "info");
 
         this.showModal = false;
 
-        this.navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderProductItemIdList);
+        this.navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderIdList);
 
     }
 
@@ -548,11 +548,11 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         return `${d}/${m}/${y}`;
     }
 
-    navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderProductItemIdList) {
+    navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderIdList) {
         this.flowInputs = [
             { name: "weekStartDate", type: "String", value: weekStartDate },
             { name: "weekEndDate", type: "String", value: weekEndDate },
-            { name: "fulfillmentOrderProductItemList", type: "String", value: fulfillmentOrderProductItemIdList }
+            { name: "fulfillmentOrderList", type: "String", value: fulfillmentOrderIdList }
         ];
 
         this.showFlow = true;
