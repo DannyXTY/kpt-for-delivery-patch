@@ -1,6 +1,6 @@
 import { LightningElement, track, wire } from 'lwc';
 import getAccounts from '@salesforce/apex/DragDropView.getAccounts';
-import getFulfillmentOrderProductItems from '@salesforce/apex/DragDropView.getFulfillmentOrderProductItems';
+
 import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import { NavigationMixin } from 'lightning/navigation';
 
@@ -8,8 +8,6 @@ import getFulfillmentOrders from '@salesforce/apex/DeliveryDispatchFulfillment.g
 
 import upsertDeliveryInfoFO from '@salesforce/apex/DeliveryDispatchFulfillment.upsertDeliveryInfoFO';
 
-
-import updateFOProductItemToPending from '@salesforce/apex/Integration.updateFOProductItemToPending';
 import updateFOToPending from '@salesforce/apex/DeliveryDispatchFulfillment.updateFOToPending';
 
 import { refreshApex } from '@salesforce/apex';
@@ -288,6 +286,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                     weight: r.Total_Weight__c,
                     status: r.Status__c,
                     truckId: r.Truck__c,
+                    orderNumber: r.Order__r?.OrderNumber || '-',
                     deliveryDate: r.Delivery_Date__c,
                     products: r.Fulfillment_Order_Product_Items__r,
                     productsRaw: (r.Fulfillment_Order_Product_Items__r || [])
@@ -298,6 +297,9 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                     url: '/' + r.Id,
                 };
             });
+
+            console.log("this.orders")
+            console.log(this.orders)
 
             this.countDraftFulfillments = this.orders.filter((o) => o.status === 'Draft').length;
             this.countAssignedFulfillments = this.orders.filter((o) => o.status === 'Assigned').length;
@@ -420,6 +422,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     }
 
     get draftOrders() {
+        console.log("draftorders get")
+        console.log(this.orders)
         return this.orders?.filter(o => o.status === 'Draft') || [];
     }
 

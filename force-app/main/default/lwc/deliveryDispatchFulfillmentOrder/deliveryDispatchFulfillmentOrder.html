@@ -4,9 +4,9 @@
         <div class="app-header">
             <h1>🚚 Delivery Planning Dashboard</h1>
             <div class="header-actions">
-                <button class="btn btn-secondary" onclick={handleRefresh}><span>↻</span>Refresh</button>
-                <button class="btn btn-secondary"><span>📊</span>Reports</button>
-                <button class="btn btn-secondary"><span>⚙️</span>Settings</button>
+                <button class="btn btn-secondary" onclick={handleRefresh}><span>↻</span> Refresh</button>
+                <button class="btn btn-secondary"><span>📊</span> Reports</button>
+                <button class="btn btn-secondary"><span>⚙️</span> Settings</button>
             </div>
         </div>
 
@@ -99,10 +99,15 @@
                             </lightning-formatted-url>
                             <input type="checkbox" checked={o.checked} onchange={handleCheckbox} data-name={o.name} />
                         </div>
-
-                        <div class="line-card flex justify-between" style="margin-bottom: 5px;">
-                            <span class="label-card">Customer:</span> <span class="truncate">{o.customer}</span>
-                            <lightning-helptext content={o.customer}></lightning-helptext>
+                        <div class="line-card flex flex-col" style="margin-bottom: 5px;">
+                            <div class="flex flex-row justify-between">
+                                <span class="label-card">OrderNo:</span> <span class="truncate">{o.orderNumber}</span>
+                                <lightning-helptext content={o.orderNumber}></lightning-helptext>
+                            </div>
+                            <div class="flex flex-row justify-between">
+                                <span class="label-card">Customer:</span> <span class="truncate">{o.customer}</span>
+                                <lightning-helptext content={o.customer}></lightning-helptext>
+                            </div>
                         </div>
                         <div class="separator"></div>
                         <div class="line-card flex flex-col justify-between">
@@ -111,7 +116,7 @@
                                     <div class="flex flex-row justify-between w-100">
                                         <span>ProductCode: {item.Product_Code__c}</span>
                                         <span>Quantity: {item.Quantity__c}</span>
-                                        <lightning-helptext content={o.Product_Code__c}></lightning-helptext>
+                                        <lightning-helptext content={item.Product_Code__c}></lightning-helptext>
                                     </div>
                                     <div class="order-weight">{item.Total_Weight__c} kg</div>
                                 </div>
@@ -138,7 +143,7 @@
                                 ondragover={handleDragOver} ondrop={handleDrop}>
 
                                 <div class="truck-header">
-                                    <div>
+                                    <div class="flex flex-row">
                                         <div class="truck-name truncate">{t.truckName} </div>
                                         <lightning-helptext content={t.tooltip}></lightning-helptext>
                                     </div>
@@ -152,17 +157,45 @@
                                                 <a href={ord.url} target="_blank" class="white-url">
                                                     {ord.name}
                                                 </a>
-
                                                 <button class="remove-btn" data-id={ord.id} data-truck-id={t.truckId}
                                                     data-date={day.date} onclick={handleRemove}>
                                                     ✕
                                                 </button>
                                             </div>
-                                            <div class="">
-                                                <label>{ord.productCode} - {ord.quantity} pcs</label>
+                                            <div>
+                                                <label for="" class="truncate">
+                                                    OrderNo: {ord.orderNumber}
+                                                </label>
+                                                <lightning-helptext content={ord.orderNumber}></lightning-helptext>
+                                            </div>
+                                            <div>
+                                                <label for="" class="truncate">
+                                                    Cust: {ord.customer}
+                                                </label>
+                                                <lightning-helptext content={ord.customer}></lightning-helptext>
+
+                                            </div>
+                                            <div>
+                                                <label for="">
+                                                    <!-- {ord.order.OrderNumber}  -->
+                                                </label>
                                             </div>
                                             <div class="">
-                                                <label>{ord.weight} kg</label>
+                                                <template for:each={ord.products} for:item="item">
+                                                    <div key={item.Id} class="mt-2">
+                                                        <div class="flex flex-row justify-between w-100">
+                                                            <span>ProductCode: {item.Product_Code__c}</span>
+                                                            <span>Quantity: {item.Quantity__c}</span>
+                                                            <lightning-helptext
+                                                                content={item.Product_Code__c}></lightning-helptext>
+                                                        </div>
+                                                        <div class="order-weight">{item.Total_Weight__c} kg</div>
+                                                    </div>
+                                                </template>
+                                                <!-- <label>{ord.productCode} - {ord.quantity} pcs</label> -->
+                                            </div>
+                                            <div class="">
+                                                <!-- <label>{ord.weight} kg</label> -->
                                             </div>
 
                                         </div>

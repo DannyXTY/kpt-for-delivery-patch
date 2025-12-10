@@ -447,3 +447,34 @@
     color: #dcdcdc;
     /* optional */
 }
+
+.truncate {
+    display: inline-block;
+    max-width: 30px;
+    /* adjust based on your card width */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+}
+
+/* Tablet */
+@media (min-width: 600px) {
+    .truncate {
+        max-width: 40px;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .truncate {
+        max-width: 60px;
+    }
+}
+
+/* Large desktop */
+@media (min-width: 1440px) {
+    .truncate {
+        max-width: 800px;
+    }
+}
