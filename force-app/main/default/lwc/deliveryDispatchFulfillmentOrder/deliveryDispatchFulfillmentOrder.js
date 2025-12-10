@@ -21,6 +21,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     selectedDate = null;
     selectedCustomer = null;
     countDraftFulfillments = 0;
+    countConfirmedFulfillments = 0;
+    countAllocatedFulfillments = 0;
     weekStart = "";
     weekEnd = "";
 
@@ -278,7 +280,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                 return {
                     id: r.Id,
                     name: r.Name,
-                    customer: r.Order__r?.Account?.Name || '-',
+                    customer: r.Order__r?.Account?.Abbreviation__c || '-',
                     productCode: "",
                     productName: "",
                     productFamily: "",
@@ -303,6 +305,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
             this.countDraftFulfillments = this.orders.filter((o) => o.status === 'Draft').length;
             this.countAssignedFulfillments = this.orders.filter((o) => o.status === 'Assigned').length;
+            this.countConfirmedFulfillments = this.orders.filter((o) => o.status === 'Confirmed').length;
+            this.countAllocatedFulfillments = this.orders.filter((o) => o.status === 'Allocated').length;
         } catch (error) {
             console.error('Order load error:', error);
             this.orders = [];

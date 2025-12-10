@@ -386,13 +386,14 @@
     white-space: nowrap;
     display: inline-block;
     flex-shrink: 0;
-    font-size: 0.75rem;
+    font-size: 0.3rem;
     line-height: 1rem;
 
 }
 
 .truck-name {
     padding: 4px 0px;
+    font-size: 0.3rem;
 }
 
 .header-card {
@@ -463,12 +464,30 @@
     .truncate {
         max-width: 40px;
     }
+
+    .truck-capacity {
+        font-size: 0.5rem;
+
+    }
+
+    .truck-name {
+        font-size: 0.5rem;
+    }
 }
 
 /* Desktop */
 @media (min-width: 1024px) {
     .truncate {
         max-width: 60px;
+    }
+
+    .truck-capacity {
+        font-size: 0.75rem;
+
+    }
+
+    .truck-name {
+        font-size: 0.75rem;
     }
 }
 
@@ -477,4 +496,5 @@
     .truncate {
         max-width: 800px;
     }
+
 }

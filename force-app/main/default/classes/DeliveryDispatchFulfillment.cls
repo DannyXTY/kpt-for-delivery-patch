@@ -18,6 +18,7 @@ public with sharing class DeliveryDispatchFulfillment {
             Order__c, Total_Weight__c, Truck__c,
             Customer_No__c, CurrencyIsoCode,
             Order__r.Account.Name,
+            Order__r.Account.Abbreviation__c,
             Order__r.Id,
             Order__r.OrderNumber,
             (
