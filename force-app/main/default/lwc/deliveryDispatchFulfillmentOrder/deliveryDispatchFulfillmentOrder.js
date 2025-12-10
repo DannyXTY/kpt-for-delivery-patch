@@ -5,6 +5,7 @@ import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
 import { NavigationMixin } from 'lightning/navigation';
 
 import getFulfillmentOrders from '@salesforce/apex/DeliveryDispatchFulfillment.getFulfillmentOrders';
+import getFilteredFulfillmentOrders from '@salesforce/apex/DeliveryDispatchFulfillment.getFilteredFulfillmentOrders';
 
 import upsertDeliveryInfoFO from '@salesforce/apex/DeliveryDispatchFulfillment.upsertDeliveryInfoFO';
 
@@ -18,9 +19,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     draggedOrderId = null;
 
     countSelectedCheckbox = 0;
-    selectedDate = null;
-    selectedCustomer = null;
+    selectedDate = new Date();
+    selectedCustomer = 'all';
     countDraftFulfillments = 0;
+    countAssignedFulfillments = 0;
     countConfirmedFulfillments = 0;
     countAllocatedFulfillments = 0;
     weekStart = "";
@@ -49,6 +51,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     @wire(getAccounts)
     wiredAccounts({ error, data }) {
         if (data) {
+            console.log('this account data')
+            console.log(data)
             this.accounts = data;
             this.error = undefined;
         } else if (error) {
@@ -150,6 +154,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
     }
 
+
     handleCheckbox(event) {
         event.preventDefault();
 
@@ -211,6 +216,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.selectedDate = event.target.value;
 
         this.generateWeek(this.selectedDate);
+        this.loadFilteredOrders();
     }
 
     getMonday(dateStr) {
@@ -264,9 +270,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.selectedDate = today.toISOString().slice(0, 10);
 
         await this.fetchTruckList();
-        await this.fetchfulfillmentOrderProductItemList();
+        // await this.fetchfulfillmentOrderProductItemList();
 
         this.generateWeek(this.selectedDate);
+        this.loadFilteredOrders()
     }
 
     async fetchfulfillmentOrderProductItemList() {
@@ -281,6 +288,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                     id: r.Id,
                     name: r.Name,
                     customer: r.Order__r?.Account?.Abbreviation__c || '-',
+                    customerId: r.Order__r?.AccountId || null,
                     productCode: "",
                     productName: "",
                     productFamily: "",
@@ -310,6 +318,55 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         } catch (error) {
             console.error('Order load error:', error);
             this.orders = [];
+        }
+    }
+
+    async loadFilteredOrders() {
+        try {
+            console.log('load filtered orders')
+            console.log(this.selectedCustomer)
+            console.log(this.weekStart)
+            console.log(this.weekEnd)
+
+            const result = await getFilteredFulfillmentOrders({
+                customerId: this.selectedCustomer === 'all' ? null : this.selectedCustomer,
+                startDate: this.weekStart,
+                endDate: this.weekEnd
+            });
+
+            this.orders = result.map(r => ({
+                id: r.Id,
+                name: r.Name,
+                status: r.Status__c,
+                deliveryDate: r.Delivery_Date__c,
+                weight: r.Total_Weight__c,
+                truckId: r.Truck__c,
+                customerId: r.Order__r?.Account__c,
+                customer: r.Order__r?.Account__r?.Abbreviation__c,
+                orderNumber: r.Order__r?.OrderNumber,
+                products: r.Fulfillment_Order_Product_Items__r,
+                productCode: "",
+                productName: "",
+                productFamily: "",
+                quantity: 0,
+                weight: r.Total_Weight__c,
+                orderNumber: r.Order__r?.OrderNumber || '-',
+                products: r.Fulfillment_Order_Product_Items__r,
+                productsRaw: (r.Fulfillment_Order_Product_Items__r || [])
+                    .map(p => `ProductCode: ${p.Product_Code__c} (Qty: ${p.Quantity__c})<br>` +
+                        `Weight: ${p.Total_Weight__c}<br><br>`)
+                    .join(', '),
+                checked: false,
+                url: '/' + r.Id,
+            }));
+
+            console.log('loadFilteredOrders')
+            console.log(this.orders)
+
+            this.rebuildAssignedOrdersIntoCalendar();
+            this.recalcTruckStatuses();
+        } catch (e) {
+            console.error('Filter error', e);
         }
     }
 
@@ -379,6 +436,9 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
     handleCustomerChange(event) {
         this.selectedCustomer = event.target.value;
+
+        console.log("selectedCustomer", this.selectedCustomer);
+        this.loadFilteredOrders();
     }
 
 

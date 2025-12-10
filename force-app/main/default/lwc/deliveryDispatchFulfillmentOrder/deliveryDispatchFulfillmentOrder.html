@@ -17,14 +17,11 @@
                 <select name="customer" onchange={handleCustomerChange}>
                     <option value="all">All Customers</option>
                     <template for:each={accounts} for:item="acc">
-                        <option key={acc.Id}>{acc.Name}</option>
+                        <option key={acc.Id} value={acc.Id}>{acc.Abbreviation__c}</option>
                     </template>
                 </select>
                 <label>Week</label>
                 <input type="date" value={selectedDate} oninput={handleDateChange}>
-
-
-
             </div>
             <!-- stats section part -->
             <div class="stats-section right-side">

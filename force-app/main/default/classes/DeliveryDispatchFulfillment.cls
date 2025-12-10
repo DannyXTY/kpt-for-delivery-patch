@@ -32,6 +32,28 @@ public with sharing class DeliveryDispatchFulfillment {
         ];
     }
 
+    @AuraEnabled(cacheable=true)
+    public static List<FulfillmentOrder__c> getFilteredFulfillmentOrders(
+        String customerId,
+        Date startDate,
+        Date endDate
+    ) {
+        String baseQuery = 
+            'SELECT Id, Name, Status__c, Delivery_Date__c, Total_Weight__c,' +
+            '       Truck__c, Order__r.Id, Order__r.Account.Abbreviation__c,' + 
+            '       Order__r.OrderNumber, Order__r.Account.Name, Customer_No__c, ' +
+            '       CurrencyIsoCode, No_of_Product_Items__c, ' +
+            '       (SELECT Id, Name, Product_Code__c, Quantity__c, Total_Weight__c FROM Fulfillment_Order_Product_Items__r)' +
+            ' FROM FulfillmentOrder__c WHERE (Order__r.EffectiveDate  <= :startDate OR Order__r.EffectiveDate = NULL) AND (Order__r.EndDate <= :endDate OR Order__r.EndDate = NULL)';
+
+        if (customerId != null && customerId != 'all') {
+            baseQuery += ' AND Order__r.Id = :customerId';
+        }
+
+        return Database.query(baseQuery);
+    }
+
+
     @AuraEnabled
     public static void upsertDeliveryInfoFO(String paramsJson) {
         System.debug('params logs from Danny test here');
