@@ -188,10 +188,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
             truck.assignedOrders = truck.assignedOrders.filter(o => o.id !== orderId);
 
-            orderObj.status = "Draft";
+            orderObj.status = "Pending";
             orderObj.truckId = null;
             orderObj.deliveryDate = null;
-            orderObj.cssClass = "draft-order";
+            orderObj.cssClass = "pending-order";
 
             this.recalcTruckStatuses();
             this.showToast("Success", "Removed from Truck", "success");
@@ -343,9 +343,9 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                 deliveryDate: r.Delivery_Date__c,
                 weight: r.Total_Weight__c,
                 truckId: r.Truck__c,
-                customerId: r.Order__r?.Account__c,
-                customer: r.Order__r?.Account__r?.Abbreviation__c,
-                orderNumber: r.Order__r?.OrderNumber,
+                customerId: r.Order__r?.Account__c || null,
+                customer: r.Order__r?.Account?.Abbreviation__c || '-',
+                orderNumber: r.Order__r?.OrderNumber || '-',
                 products: r.Fulfillment_Order_Product_Items__r,
                 productCode: "",
                 productName: "",
@@ -382,7 +382,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     rebuildAssignedOrdersIntoCalendar() {
         // Loop through all Assigned orders
         this.orders
-            .filter(o => o.status !== 'Draft')
+            .filter(o => o.status !== 'Pending')
             .forEach(order => {
                 // find calendar day
                 const day = this.calendarData.find(d => d.date === order.deliveryDate);
@@ -393,8 +393,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                 if (!truck) return;
 
                 let cssClass = '';
-                if (order.status === 'Draft') {
-                    cssClass = 'draft-order';
+                if (order.status === 'Pending') {
+                    cssClass = 'pending-order';
                 } else if (order.status === 'Assigned') {
                     cssClass = 'assigned-order';
                 } else if (order.status === 'Confirmed') {
@@ -494,10 +494,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         });
     }
 
-    get draftOrders() {
-        console.log("draftorders get")
+    get pendingOrders() {
+        console.log("pendingorders get")
         console.log(this.orders)
-        return this.orders?.filter(o => o.status === 'Draft') || [];
+        return this.orders?.filter(o => o.status === 'Pending') || [];
     }
 
     get assignedOrders() {

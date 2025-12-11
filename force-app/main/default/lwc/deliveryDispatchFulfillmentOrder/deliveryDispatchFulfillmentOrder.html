@@ -52,7 +52,7 @@
             <div class="legend-item">
                 <div class="legend-item">
                     <div class="legend-color" style="background: #fc5b5b;"></div>
-                    <span>Draft</span>
+                    <span>Pending</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background: #0176d3;"></div>
@@ -95,7 +95,7 @@
                     <!-- <button class="btn btn-primary mt-4 w-100">Submit</button> -->
                 </div>
 
-                <template for:each={draftOrders} for:item="o">
+                <template for:each={pendingOrders} for:item="o">
                     <div key={o.id} class="order-card" draggable="true" data-id={o.id} data-name={o.name}
                         ondragstart={handleDragStart}>
                         <div class="header-card">
