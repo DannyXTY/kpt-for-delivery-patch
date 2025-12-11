@@ -240,10 +240,23 @@
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
     <template if:true={showFlow}>
-        <lightning-flow flow-api-name={flowName} flow-input-variables={inputVariables}
-            onstatuschange={handleFlowStatus}>
-        </lightning-flow>
+        <section role="dialog" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">AI Scheduling Flow</h2>
+                    <button class="slds-button slds-modal__close" onclick={closeFlowModal}>X</button>
+                </header>
+
+                <div class="slds-modal__content">
+                    <lightning-flow flow-api-name={flowName} flow-input-variables={inputVariables}
+                        onstatuschange={handleFlowStatus}>
+                    </lightning-flow>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
+
 
 
 </template>

@@ -584,4 +584,9 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     handleRefresh() {
         window.location.reload();
     }
+
+    closeFlowModal() {
+        this.showFlow = false;
+    }
+
 }
