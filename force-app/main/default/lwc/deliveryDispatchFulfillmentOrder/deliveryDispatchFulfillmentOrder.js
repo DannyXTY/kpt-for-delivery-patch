@@ -399,6 +399,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                     cssClass = 'assigned-order';
                 } else if (order.status === 'Confirmed') {
                     cssClass = 'confirmed-order';
+                } else if (order.status === 'Error') {
+                    cssClass = 'error-order';
                 } else {
                     cssClass = 'allocated-order';
                 }

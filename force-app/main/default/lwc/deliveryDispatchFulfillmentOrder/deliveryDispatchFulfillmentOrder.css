@@ -313,6 +313,15 @@
 
 }
 
+.error-order {
+    background: #FF0000;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 12px;
+}
+
+
 .remove-btn {
     background: transparent;
     border: none;
