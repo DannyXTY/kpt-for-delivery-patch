@@ -9,6 +9,33 @@ public with sharing class DeliveryDispatchFulfillment {
         }
     }
 
+    @AuraEnabled(cacheable=false)
+    public static List<Fulfillment_AI_Scheduling_Log_Item__c> getSchedulingLogItems(
+        Id schedulingLogId
+    ) {
+        return [
+            SELECT Id, Name, Fulfillment_Order__c, Recommendation_Reason__c,
+            Recommendation_Status__c, Recommendation_Suggestion__c, Recommended_Delivery_Date__c,
+            Recommended_Truck__c, Fulfillment_AI_Scheduling_Log__c
+            FROM Fulfillment_AI_Scheduling_Log_Item__c
+            WHERE Fulfillment_AI_Scheduling_Log__c = :schedulingLogId
+            ORDER BY CreatedDate ASC
+        ];
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static List<Fulfillment_AI_Delivery_Condition_Item__c> getDeliveryConditionItems(
+        Id schedulingLogId
+    ) {
+        return [
+            SELECT Id, Name, Fulfillment_AI_Scheduling_Log__c, Fulfillment_AI_Scheduling_Log_Item__c,
+            Delivery_Condition__c, Delivery_Condition_Reason__c, Delivery_Condition_Status__c,
+            Delivery_Condition_Suggestion__c
+            FROM Fulfillment_AI_Delivery_Condition_Item__c
+            WHERE Fulfillment_AI_Scheduling_Log__c = :schedulingLogId
+            ORDER BY CreatedDate ASC
+        ];
+    }
 
     @AuraEnabled(cacheable=true)
     public static List<FulfillmentOrder__c> getFulfillmentOrders() {
@@ -52,6 +79,19 @@ public with sharing class DeliveryDispatchFulfillment {
 
         return Database.query(baseQuery);
     }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Fulfillment_AI_Scheduling_Log__c> getAISchedulingResult(
+        String id
+    ) {
+        return [
+            SELECT Id, Status__c
+            FROM Fulfillment_AI_Scheduling_Log__c
+            WHERE Id = :id
+            LIMIT 1
+        ];
+    }
+
 
 
     @AuraEnabled

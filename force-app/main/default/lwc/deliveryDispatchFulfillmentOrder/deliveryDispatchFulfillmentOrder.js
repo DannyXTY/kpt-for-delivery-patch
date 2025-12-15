@@ -1,4 +1,4 @@
-import { LightningElement, track, wire } from 'lwc';
+import { LightningElement, track, wire, api } from 'lwc';
 import getAccounts from '@salesforce/apex/DragDropView.getAccounts';
 
 import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
@@ -6,6 +6,10 @@ import { NavigationMixin } from 'lightning/navigation';
 
 import getFulfillmentOrders from '@salesforce/apex/DeliveryDispatchFulfillment.getFulfillmentOrders';
 import getFilteredFulfillmentOrders from '@salesforce/apex/DeliveryDispatchFulfillment.getFilteredFulfillmentOrders';
+import getAISchedulingResult from '@salesforce/apex/DeliveryDispatchFulfillment.getAISchedulingResult';
+
+import getSchedulingLogItems from '@salesforce/apex/DeliveryDispatchFulfillment.getSchedulingLogItems';
+import getDeliveryConditionItems from '@salesforce/apex/DeliveryDispatchFulfillment.getDeliveryConditionItems';
 
 import upsertDeliveryInfoFO from '@salesforce/apex/DeliveryDispatchFulfillment.upsertDeliveryInfoFO';
 
@@ -16,7 +20,20 @@ import { refreshApex } from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(LightningElement) {
+
     draggedOrderId = null;
+
+    fulfillmentAISchedulingLogId = "";
+    isLoading = false;
+    pollingInterval;
+
+    // for showing result;
+    showResultAIScheduleModal = false;
+
+    schedulingAILogItems = [];
+    deliveryConditionAILogItems = [];
+
+
 
     countSelectedCheckbox = 0;
     selectedDate = new Date();
@@ -39,6 +56,38 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         { label: 'Order Name', fieldName: 'name', type: 'text' },
         { label: 'Customer', fieldName: 'customer', type: 'text' },
         { label: 'Details', fieldName: 'productsRaw', type: 'text' }
+    ];
+
+    schedulingLogColumns = [
+        {
+            label: 'Log Item Name',
+            fieldName: 'logItemUrl',
+            type: 'url',
+            typeAttributes: {
+                label: { fieldName: 'Name' },
+                target: '_blank'
+            }
+        },
+        { label: 'Fulfillment Order', fieldName: 'Fulfillment_Order__c' },
+        { label: 'Recommended Delivery Date', fieldName: 'Recommended_Delivery_Date__c', type: 'date' },
+        { label: 'Recommended Truck', fieldName: 'Recommended_Truck__c' },
+        { label: 'Recommendation Status', fieldName: 'Recommendation_Status__c' }
+    ];
+
+    deliveryConditionColumns = [
+        {
+            label: 'Id',
+            fieldName: 'logItemUrl',
+            type: 'url',
+            typeAttributes: {
+                label: { fieldName: 'Id' },
+                target: '_blank'
+            }
+        },
+        { label: 'FO Product Item', fieldName: 'Fulfillment_Order_Product_Item__c' },
+        { label: 'Reason', fieldName: 'Delivery_Condition_Reason__c' },
+        { label: 'Status', fieldName: 'Delivery_Condition_Status__c' },
+        { label: 'Suggestion', fieldName: 'Delivery_Condition_Suggestion__c' }
     ];
 
 
@@ -267,6 +316,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     }
 
     async connectedCallback() {
+        this.loadContentDeliveryDispatch();
+    }
+
+    async loadContentDeliveryDispatch() {
         const today = new Date();
         this.selectedDate = today.toISOString().slice(0, 10);
 
@@ -275,6 +328,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
         this.generateWeek(this.selectedDate);
         this.loadFilteredOrders()
+
     }
 
     async fetchfulfillmentOrderProductItemList() {
@@ -563,7 +617,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.flowInputs = [
             { name: "weekStartDate", type: "String", value: weekStartDate },
             { name: "weekEndDate", type: "String", value: weekEndDate },
-            { name: "fulfillmentOrderList", type: "String", value: fulfillmentOrderIdList }
+            { name: "fulfillmentOrderProductItemList", type: "String", value: fulfillmentOrderIdList }
         ];
 
         this.showFlow = true;
@@ -574,8 +628,31 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         console.log("Flow status:", event.detail.status);
 
         if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
+            console.log("event.detail")
+            console.log(JSON.stringify(event.detail))
+
+            const outputVars = event.detail.outputVariables || [];
+            let logId = null;
+
+            outputVars.forEach(v => {
+                if (v.name === 'FulfillmentAISchedulingLogId') {
+                    logId = v.value;
+                }
+            });
+
+            console.log('Fulfillment AI Scheduling Log Id:', logId);
+
+            // store it if needed
+            this.fulfillmentAISchedulingLogId = logId;
+
+
             this.showFlow = false;
-            this.showToast("Success", "AI Scheduling completed", "success");
+            this.showToast("Success", "AI Scheduling scheduled", "success");
+
+            // Example: query again using the log id
+            if (logId) {
+                this.querySchedulingLog(logId);
+            }
         }
     }
 
@@ -589,6 +666,82 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
     closeFlowModal() {
         this.showFlow = false;
+    }
+
+    querySchedulingLog(logId) {
+        console.log("querySchedulingLog")
+
+        this.isLoading = true;
+        // clear existing polling if any
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+        }
+
+        // poll every 5 seconds
+        this.pollingInterval = setInterval(() => {
+            getAISchedulingResult({ id: logId })
+                .then(result => {
+                    if (!result || result.length === 0) {
+                        return;
+                    }
+
+                    const status = result[0].Status__c;
+
+                    console.log('AI Scheduling Status:', status);
+
+                    if (status === 'Completed') {
+                        clearInterval(this.pollingInterval);
+                        this.pollingInterval = null;
+
+                        this.isLoading = false;
+                        // this.loadContentDeliveryDispatch();
+                        this.fetchAISchedulingDetails(logId);
+
+                        this.showToast('Success', 'AI Scheduling completed', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error(error)
+                    clearInterval(this.pollingInterval);
+                    this.pollingInterval = null;
+
+                    this.isLoading = false;
+                    this.showToast('Error', 'Failed to refresh scheduling', 'error');
+                });
+        }, 5000);
+    }
+
+
+    fetchAISchedulingDetails(logId) {
+        Promise.all([
+            getSchedulingLogItems({ schedulingLogId: logId }),
+            getDeliveryConditionItems({ schedulingLogId: logId })
+        ])
+            .then(([logItems, conditionItems]) => {
+                this.schedulingLogItems = logItems.map(item => ({
+                    ...item,
+                    logItemUrl: '/' + item.Id
+                }));
+
+                this.deliveryConditionItems = conditionItems.map(item => ({
+                    ...item,
+                    logItemUrl: '/' + item.Id
+                }));
+
+                // this.deliveryConditionItems = conditionItems;
+
+                this.showResultAIScheduleModal = true;
+
+                this.loadContentDeliveryDispatch();
+            })
+            .catch(error => {
+                console.error(error);
+                this.showToast('Error', 'Failed to load AI scheduling details', 'error');
+            });
+    }
+
+    closeResultModal() {
+        this.showResultAIScheduleModal = false;
     }
 
 }
