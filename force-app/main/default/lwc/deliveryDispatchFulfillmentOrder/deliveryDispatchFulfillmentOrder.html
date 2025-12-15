@@ -177,8 +177,8 @@
                                                 <template for:each={ord.products} for:item="item">
                                                     <div key={item.Id} class="mt-2">
                                                         <div class="flex flex-row justify-between w-100">
-                                                            <span>ProductCode: {item.Product_Code__c}</span>
-                                                            <span>Quantity: {item.Quantity__c}</span>
+                                                            <span>ProductCode:<br /> {item.Product_Code__c}</span>
+                                                            <span>Quantity:<br /> {item.Quantity__c}</span>
                                                             <lightning-helptext
                                                                 content={item.Product_Code__c}></lightning-helptext>
                                                         </div>
