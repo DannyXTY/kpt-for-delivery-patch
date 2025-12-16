@@ -8,6 +8,7 @@ import getFulfillmentOrders from '@salesforce/apex/DeliveryDispatchFulfillment.g
 import getFilteredFulfillmentOrders from '@salesforce/apex/DeliveryDispatchFulfillment.getFilteredFulfillmentOrders';
 import getAISchedulingResult from '@salesforce/apex/DeliveryDispatchFulfillment.getAISchedulingResult';
 
+import getAiSchedulingLog from '@salesforce/apex/DeliveryDispatchFulfillment.getAiSchedulingLog';
 import getSchedulingLogItems from '@salesforce/apex/DeliveryDispatchFulfillment.getSchedulingLogItems';
 import getDeliveryConditionItems from '@salesforce/apex/DeliveryDispatchFulfillment.getDeliveryConditionItems';
 
@@ -30,10 +31,9 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     // for showing result;
     showResultAIScheduleModal = false;
 
-    schedulingAILogItems = [];
-    deliveryConditionAILogItems = [];
-
-
+    aiSchedulingLogs = [];
+    schedulingLogItems = [];
+    deliveryConditionItems = [];
 
     countSelectedCheckbox = 0;
     selectedDate = new Date();
@@ -52,10 +52,28 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     showFlow = false;
     flowInputs = [];
 
+    flowAiScheduleLogResultName = 'Delivery_Dispatch_AI_Schedule_Result';
+    showModalAiSchedulingLog = false;
+
+
     orderColumns = [
         { label: 'Order Name', fieldName: 'name', type: 'text' },
         { label: 'Customer', fieldName: 'customer', type: 'text' },
-        { label: 'Details', fieldName: 'productsRaw', type: 'text' }
+    ];
+
+    aiSchedulingLogColumns = [
+        {
+            label: 'Log Id',
+            fieldName: 'logItemUrl',
+            type: 'url',
+            typeAttributes: {
+                label: { fieldName: 'Name' },
+                target: '_blank'
+            }
+        },
+        { label: 'Summary Notes', fieldName: 'Summary_Notes__c' },
+        { label: 'Week Start Date', fieldName: 'Week_Start_Date__c' },
+        { label: 'Week End Date', fieldName: 'Week_End_Date__c' },
     ];
 
     schedulingLogColumns = [
@@ -213,8 +231,6 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
         if (order.checked) {
             // process to AI scheduling
-
-
             this.countSelectedCheckbox++;
         } else {
             this.countSelectedCheckbox--;
@@ -605,8 +621,20 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.showModal = false;
 
         this.navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderIdList);
-
+        this.resetSelection();
     }
+
+    resetSelection() {
+        this.countSelectedCheckbox = 0;
+
+        this.orders = this.orders.map(order => ({
+            ...order,
+            checked: false
+        }));
+
+        this.selectedOrders = [];
+    }
+
 
     formatToDDMMYYYY(iso) {
         const [y, m, d] = iso.split("-");
@@ -621,7 +649,6 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         ];
 
         this.showFlow = true;
-
     }
 
     handleFlowStatus(event) {
@@ -647,11 +674,11 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
 
             this.showFlow = false;
-            this.showToast("Success", "AI Scheduling scheduled", "success");
+            this.showToast("Success", "AI scheduling submitted", "success");
 
             // Example: query again using the log id
             if (logId) {
-                this.querySchedulingLog(logId);
+                // this.querySchedulingLog(logId);
             }
         }
     }
@@ -695,9 +722,9 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
                         this.isLoading = false;
                         // this.loadContentDeliveryDispatch();
-                        this.fetchAISchedulingDetails(logId);
+                        // this.fetchAISchedulingDetails(logId);
 
-                        this.showToast('Success', 'AI Scheduling completed', 'success');
+                        this.showToast('Success', 'AI scheduling submitted', 'success');
                     }
                 })
                 .catch(error => {
@@ -714,10 +741,16 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
     fetchAISchedulingDetails(logId) {
         Promise.all([
+            getAiSchedulingLog({ schedulingLogId: logId }),
             getSchedulingLogItems({ schedulingLogId: logId }),
             getDeliveryConditionItems({ schedulingLogId: logId })
         ])
-            .then(([logItems, conditionItems]) => {
+            .then(([aiLogs, logItems, conditionItems]) => {
+                this.aiSchedulingLogs = aiLogs.map(item => ({
+                    ...item,
+                    logItemUrl: '/' + item.Id
+                }));
+
                 this.schedulingLogItems = logItems.map(item => ({
                     ...item,
                     logItemUrl: '/' + item.Id
@@ -742,6 +775,20 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
     closeResultModal() {
         this.showResultAIScheduleModal = false;
+    }
+
+    handleShowModalAISchedulingLogFlow() {
+        this.showModalAiSchedulingLog = true;
+    }
+
+    handleFlowAiScheduleLogStatus(event) {
+        if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
+            this.showModalAiSchedulingLog = false;
+        }
+    }
+
+    closeHandleFlowAiScheduleLogStatus() {
+        this.showModalAiSchedulingLog = false;
     }
 
 }

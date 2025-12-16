@@ -10,6 +10,20 @@ public with sharing class DeliveryDispatchFulfillment {
     }
 
     @AuraEnabled(cacheable=false)
+    public static List<Fulfillment_AI_Scheduling_Log__c> getAiSchedulingLog(
+        Id schedulingLogId
+    ) {
+        return [
+            SELECT Id, Name, Status__c, Summary_Assigned_Count__c,
+            Summary_Notes__c, Summary_Total_Items__c, Summary_Unassigned_Count__c,
+            Week_End_Date__c, Week_Start_Date__c
+            FROM Fulfillment_AI_Scheduling_Log__c
+            WHERE Id = :schedulingLogId
+            ORDER BY CreatedDate ASC
+        ];
+    }
+
+    @AuraEnabled(cacheable=false)
     public static List<Fulfillment_AI_Scheduling_Log_Item__c> getSchedulingLogItems(
         Id schedulingLogId
     ) {
@@ -167,7 +181,7 @@ public with sharing class DeliveryDispatchFulfillment {
 
         FOtoUpdate.Truck__c = null;
         FOtoUpdate.Delivery_Date__c = null;
-        FOtoUpdate.Status__c = 'Draft';
+        FOtoUpdate.Status__c = 'Pending';
         update FOtoUpdate;
     }
 
