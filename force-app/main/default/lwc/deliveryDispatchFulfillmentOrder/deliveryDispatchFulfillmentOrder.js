@@ -44,6 +44,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     countAssignedFulfillments = 0;
     countConfirmedFulfillments = 0;
     countAllocatedFulfillments = 0;
+
+    weekStartText = "";
     weekStart = "";
     weekEnd = "";
 
@@ -135,20 +137,6 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
             this.accounts = [];
         }
     }
-
-    /*
-    example orders
-    @track orders = [
-        {
-            id: 1, name: 'FI-001',
-            customer: 'FPFL000021',
-            productCode: "FPFL000021",
-            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x700 L",
-            quantity: 2, weight: 4000,
-            checked: false,
-        }
-    ];
-    */
 
     @track calendarData = [
     ];
@@ -292,13 +280,6 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.loadFilteredOrders();
     }
 
-    getMonday(dateStr) {
-        const d = new Date(dateStr);
-        const day = d.getDay(); // 0=Sun
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(d.setDate(diff));
-    }
-
     generateWeek(dateString) {
         const base = new Date(dateString);
 
@@ -309,7 +290,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         const monday = new Date(base);
         monday.setDate(base.getDate() + mondayOffset);
 
-        this.weekStart = monday.toISOString().slice(0, 10);
+        this.weekStart = monday.toISOString().slice(0, 10)
+
+        const normalizedWeekStart = this.normalizeWeekStart(this.weekStart);
+        this.weekStartText = this.formatToYYYYMMDD(normalizedWeekStart)
 
         const friday = new Date(monday);
         friday.setDate(monday.getDate() + 4);
@@ -336,6 +320,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.calendarData = days;
         this.recalcTruckStatuses();
         this.rebuildAssignedOrdersIntoCalendar();
+        this.resetSelection();
     }
 
     async connectedCallback() {
@@ -609,7 +594,14 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     }
 
 
+    formatToYYYYMMDD(date) {
+        const d = new Date(date);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
 
+        return `${year}-${month}-${day}`;
+    }
 
     formatToDDMMYYYY(date) {
         const d = new Date(date);
@@ -618,9 +610,6 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         const year = d.getFullYear();
 
         return `${day}/${month}/${year}`;
-
-        // const [y, m, d] = iso.split("-");
-        // return `${d}/${m}/${y}`;
     }
 
     confirmAISchedule() {
@@ -677,9 +666,6 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         }
 
         if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
-            this.showFlow = false;
-
-            /*
             console.log("event.detail")
             console.log(JSON.stringify(event.detail))
 
@@ -694,8 +680,6 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                 );
                 this.resetSelection();
             }, 0);
-            */
-
         }
     }
 
@@ -707,7 +691,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
             checked: false
         }));
 
-        this.selectedOrders = [];
+        // this.selectedOrders = [];
     }
 
 
