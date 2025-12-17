@@ -23,6 +23,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(LightningElement) {
 
     draggedOrderId = null;
+    isFlowInitialized = false;
 
     fulfillmentAISchedulingLogId = "";
     isLoading = false;
@@ -52,8 +53,14 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     showFlow = false;
     flowInputs = [];
 
+
     flowAiScheduleLogResultName = 'Delivery_Dispatch_AI_Schedule_Result';
     showModalAiSchedulingLog = false;
+
+    // screen flow modal
+    showModalAiValidateResult = false;
+    flowAiValidationName = 'Fulfillment_AI_Scheduling_Validate_Fulfillment_Schedule';
+    flowAiValidateInput = [];
 
 
     orderColumns = [
@@ -601,12 +608,29 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.showModal = false;
     }
 
+
+
+
+    formatToDDMMYYYY(date) {
+        const d = new Date(date);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+
+        return `${day}/${month}/${year}`;
+
+        // const [y, m, d] = iso.split("-");
+        // return `${d}/${m}/${y}`;
+    }
+
     confirmAISchedule() {
         // This is where you later call your AI scheduling logic
         console.log("Selected orders:", this.selectedOrders);
         console.log("Week:", this.weekStart, this.weekEnd);
+        const normalizedWeekStart = this.normalizeWeekStart(this.weekStart);
+        console.log("normalizedWeekStart:", this.weekStart, this.weekEnd);
 
-        const weekStartDate = this.formatToDDMMYYYY(this.weekStart);
+        const weekStartDate = this.formatToDDMMYYYY(normalizedWeekStart);
         const weekEndDate = this.formatToDDMMYYYY(this.weekEnd);
         const fulfillmentOrderIdList = this.selectedOrders
             .map(o => o.id) // or o.fulfillmentOrderProductItemId (your real field)
@@ -621,7 +645,58 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.showModal = false;
 
         this.navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderIdList);
-        this.resetSelection();
+
+    }
+
+    normalizeWeekStart(date) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const input = new Date(date);
+        input.setHours(0, 0, 0, 0);
+
+        return input < today ? today : input;
+    }
+
+    navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderIdList) {
+        this.flowInputs = [
+            { name: "weekStartDate", type: "String", value: weekStartDate },
+            { name: "weekEndDate", type: "String", value: weekEndDate },
+            { name: "fulfillmentOrderProductItemList", type: "String", value: fulfillmentOrderIdList }
+        ];
+
+        this.showFlow = true;
+        this.isFlowInitialized = true;
+    }
+
+    handleFlowStatus(event) {
+        console.log("Flow status:", event.detail.status);
+
+        if (event.detail.status === "STARTED") {
+            console.log('FLOW STARTED')
+        }
+
+        if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
+            this.showFlow = false;
+
+            /*
+            console.log("event.detail")
+            console.log(JSON.stringify(event.detail))
+
+            setTimeout(() => {
+                this.showFlow = false;
+                this.isFlowInitialized = false;
+
+                this.showToast(
+                    'Success',
+                    'AI scheduling submitted',
+                    'success'
+                );
+                this.resetSelection();
+            }, 0);
+            */
+
+        }
     }
 
     resetSelection() {
@@ -636,55 +711,12 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     }
 
 
-    formatToDDMMYYYY(iso) {
-        const [y, m, d] = iso.split("-");
-        return `${d}/${m}/${y}`;
-    }
-
-    navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderIdList) {
-        this.flowInputs = [
-            { name: "weekStartDate", type: "String", value: weekStartDate },
-            { name: "weekEndDate", type: "String", value: weekEndDate },
-            { name: "fulfillmentOrderProductItemList", type: "String", value: fulfillmentOrderIdList }
-        ];
-
-        this.showFlow = true;
-    }
-
-    handleFlowStatus(event) {
-        console.log("Flow status:", event.detail.status);
-
-        if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
-            console.log("event.detail")
-            console.log(JSON.stringify(event.detail))
-
-            const outputVars = event.detail.outputVariables || [];
-            let logId = null;
-
-            outputVars.forEach(v => {
-                if (v.name === 'FulfillmentAISchedulingLogId') {
-                    logId = v.value;
-                }
-            });
-
-            console.log('Fulfillment AI Scheduling Log Id:', logId);
-
-            // store it if needed
-            this.fulfillmentAISchedulingLogId = logId;
-
-
-            this.showFlow = false;
-            this.showToast("Success", "AI scheduling submitted", "success");
-
-            // Example: query again using the log id
-            if (logId) {
-                // this.querySchedulingLog(logId);
-            }
-        }
-    }
-
     get inputVariables() {
         return this.flowInputs;
+    }
+
+    get inputValidateAIVariables() {
+        return this.flowAiValidateInput
     }
 
     handleRefresh() {
@@ -782,13 +814,44 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     }
 
     handleFlowAiScheduleLogStatus(event) {
+        console.log('event.detail.status')
+        console.log(event.detail.status)
         if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
             this.showModalAiSchedulingLog = false;
         }
     }
 
+    handleFlowAiValidation(event) {
+        console.log('handleFlowAiValidation')
+        console.log(event.detail.status)
+        if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
+            this.showModalAiValidateResult = false;
+        }
+    }
+
     closeHandleFlowAiScheduleLogStatus() {
         this.showModalAiSchedulingLog = false;
+    }
+
+    closeHandleFlowAiValidation() {
+        this.showModalAiValidateResult = false;
+    }
+
+    handleShowModalAIValidateFlow() {
+        const normalizedWeekStart = this.normalizeWeekStart(this.weekStart);
+
+        const weekStartDate = this.formatToDDMMYYYY(normalizedWeekStart);
+        const weekEndDate = this.formatToDDMMYYYY(this.weekEnd);
+
+        console.log(weekStartDate)
+        console.log(weekEndDate)
+
+        this.flowAiValidateInput = [
+            { name: "weekStartDate", type: "String", value: weekStartDate },
+            { name: "weekEndDate", type: "String", value: weekEndDate },
+        ];
+
+        this.showModalAiValidateResult = true;
     }
 
 }

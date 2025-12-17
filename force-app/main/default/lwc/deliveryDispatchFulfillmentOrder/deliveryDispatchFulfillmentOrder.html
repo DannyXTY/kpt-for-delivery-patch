@@ -6,7 +6,7 @@
             <div class="header-actions">
                 <button class="btn btn-secondary" onclick={handleShowModalAISchedulingLogFlow}> Auto Schedule
                     Result</button>
-                <button class="btn btn-secondary"> Validate Schedule</button>
+                <button class="btn btn-secondary" onclick={handleShowModalAIValidateFlow}> Validate Schedule</button>
                 <button class="btn btn-secondary" onclick={handleRefresh}><span>↻</span> Refresh</button>
                 <!-- <button class="btn btn-secondary"><span>📊</span> Reports</button>
                 <button class="btn btn-secondary"><span>⚙️</span> Settings</button> -->
@@ -257,9 +257,16 @@
 
                 <div class="slds-modal__content">
                     <lightning-flow flow-api-name={flowName} flow-input-variables={inputVariables}
-                        onstatuschange={handleFlowStatus}>
+                        flow-finish-behavior="NONE" onstatuschange={handleFlowStatus}>
                     </lightning-flow>
                 </div>
+                <!-- 
+                    <footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_brand" onclick={closeFlowModal}>
+                            Close
+                        </button>
+                    </footer>
+                -->
             </div>
         </section>
         <div class="slds-backdrop slds-backdrop_open"></div>
@@ -352,7 +359,21 @@
 
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
+    <template if:true={showModalAiValidateResult}>
+        <section role="dialog" class="slds-modal slds-fade-in-open slds-modal_x-large">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">AI Validation</h2>
+                    <button class="slds-button slds-modal__close" onclick={closeHandleFlowAiValidation}>✕</button>
+                </header>
+                <div class="slds-modal__content">
+                    <lightning-flow flow-api-name={flowAiValidationName} flow-input-variables={inputValidateAIVariables}
+                        flow-finish-behavior="NONE" onstatuschange={handleFlowAiValidation}>
+                    </lightning-flow>
+                </div>
+            </div>
+        </section>
 
-
-
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
 </template>
