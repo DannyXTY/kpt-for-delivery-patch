@@ -810,6 +810,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         console.log(event.detail.status)
         if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
             this.showModalAiValidateResult = false;
+            this.handleRefresh();
         }
     }
 
