@@ -472,6 +472,14 @@
     justify-content: center;
 }
 
+.truck-out-of-service {
+    background: #ffc0cb;
+    border: 2px solid #d6336c;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+
 /* Tablet */
 @media (min-width: 600px) {
     .truncate {

@@ -77,6 +77,14 @@
             </div>
             <div class="legend-item">
                 <div class="legend-item">
+                    <div class="legend-color" style="background: #ffc0cb;"></div>
+                    <span>Truck Out of Service</span>
+                </div>
+
+            </div>
+
+            <div class="legend-item">
+                <div class="legend-item">
                     <div class="legend-color" style="background: #2e844a;"></div>
                     <span>Under Capacity</span>
                 </div>
@@ -148,7 +156,7 @@
                         </div>
 
                         <template for:each={day.trucks} for:item="t">
-                            <div key={t.truckId} class="truck-card" data-truck-id={t.truckId} data-date={day.date}
+                            <div key={t.truckId} class={t.cssClass} data-truck-id={t.truckId} data-date={day.date}
                                 ondragover={handleDragOver} ondrop={handleDrop}>
 
                                 <div class="truck-header">

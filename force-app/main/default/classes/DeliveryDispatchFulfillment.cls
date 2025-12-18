@@ -185,4 +185,18 @@ public with sharing class DeliveryDispatchFulfillment {
         update FOtoUpdate;
     }
 
+    @AuraEnabled(cacheable=true)
+    public static List<Out_of_Service_Truck_Schedule__c> getOutOfServiceTrucks(
+        Date weekStart,
+        Date weekEnd
+    ) {
+        return [
+            SELECT Id, Truck__c, Start_Date__c, End_Date__c
+            FROM Out_of_Service_Truck_Schedule__c
+            WHERE Start_Date__c <= :weekEnd
+            AND End_Date__c >= :weekStart
+        ];
+    }
+
+
 }

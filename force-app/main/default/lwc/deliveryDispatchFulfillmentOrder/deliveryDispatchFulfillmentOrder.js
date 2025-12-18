@@ -16,6 +16,9 @@ import upsertDeliveryInfoFO from '@salesforce/apex/DeliveryDispatchFulfillment.u
 
 import updateFOToPending from '@salesforce/apex/DeliveryDispatchFulfillment.updateFOToPending';
 
+import getOutOfServiceTrucks
+    from '@salesforce/apex/DeliveryDispatchFulfillment.getOutOfServiceTrucks';
+
 import { refreshApex } from '@salesforce/apex';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -147,10 +150,21 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     }
 
     handleDragOver(e) {
+        if (e.currentTarget.dataset.outOfService === 'true') {
+            return;
+        }
         e.preventDefault();
     }
 
     handleDrop(e) {
+        if (e.currentTarget.dataset.outOfService === 'true') {
+            this.showToast(
+                'Unavailable',
+                'Truck is out of service on this date',
+                'warning'
+            );
+            return;
+        }
         e.preventDefault();
 
         const orderId = e.dataTransfer.getData('text/plain');
@@ -300,6 +314,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
         this.weekEnd = friday.toISOString().slice(0, 10);
 
+        this.loadOutOfService();
+
         const days = [];
 
         for (let i = 0; i < 5; i++) {
@@ -322,6 +338,39 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.rebuildAssignedOrdersIntoCalendar();
         this.resetSelection();
     }
+
+    async loadOutOfService() {
+        this.outOfService = await getOutOfServiceTrucks({
+            weekStart: this.weekStart,
+            weekEnd: this.weekEnd
+        });
+
+        this.applyOutOfServiceFlags();
+    }
+
+    applyOutOfServiceFlags() {
+        this.calendarData = this.calendarData.map(day => {
+            const trucks = day.trucks.map(truck => {
+                const blocked = this.outOfService.some(s =>
+                    s.Truck__c === truck.truckId &&
+                    s.Start_Date__c <= day.date &&
+                    s.End_Date__c >= day.date
+                );
+
+                return {
+                    ...truck,
+                    isOutOfService: blocked,
+                    cssClass: blocked
+                        ? 'truck-card truck-out-of-service'
+                        : 'truck-card '
+                };
+            });
+
+            return { ...day, trucks };
+        });
+    }
+
+
 
     async connectedCallback() {
         this.loadContentDeliveryDispatch();
