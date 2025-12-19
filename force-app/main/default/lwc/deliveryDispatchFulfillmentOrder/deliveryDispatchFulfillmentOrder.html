@@ -7,6 +7,8 @@
                 <button class="btn btn-secondary" onclick={handleShowModalAISchedulingLogFlow}> Auto Schedule
                     Result</button>
                 <button class="btn btn-secondary" onclick={handleShowModalAIValidateFlow}> Validate Schedule</button>
+                <button class="btn btn-secondary" onclick={handleShowModalConfirmFulfillmentFlow}> Confirm
+                    Fulfillment</button>
                 <button class="btn btn-secondary" onclick={handleRefresh}><span>↻</span> Refresh</button>
                 <!-- <button class="btn btn-secondary"><span>📊</span> Reports</button>
                 <button class="btn btn-secondary"><span>⚙️</span> Settings</button> -->
@@ -133,7 +135,7 @@
                                     <div class="flex flex-row justify-between w-100">
                                         <span>ProductCode: <br />{item.Product_Code__c}</span>
                                         <span>Quantity: <br />{item.Quantity__c}</span>
-                                        <lightning-helptext content={item.Product_Code__c}></lightning-helptext>
+                                        <lightning-helptext content={item.productsNameAndCode}></lightning-helptext>
                                     </div>
                                 </div>
                             </template>
@@ -160,7 +162,7 @@
                                 ondragover={handleDragOver} ondrop={handleDrop}>
 
                                 <div class="truck-header">
-                                    <div class="flex flex-row">
+                                    <div class="flex flex-row pointer-events-auto">
                                         <div class="truck-name truncate">{t.truckName} </div>
                                         <lightning-helptext content={t.tooltip}></lightning-helptext>
                                     </div>
@@ -187,11 +189,12 @@
                                             <div class="">
                                                 <template for:each={ord.products} for:item="item">
                                                     <div key={item.Id} class="mt-2">
-                                                        <div class="flex flex-row justify-between w-100">
+                                                        <div
+                                                            class="flex flex-row justify-between w-100 pointer-events-auto">
                                                             <span>ProductCode:<br /> {item.Product_Code__c}</span>
                                                             <span>Quantity:<br /> {item.Quantity__c}</span>
                                                             <lightning-helptext
-                                                                content={item.Product_Code__c}></lightning-helptext>
+                                                                content={item.productsNameAndCode}></lightning-helptext>
                                                         </div>
                                                         <!-- <div class="order-weight">{item.Total_Weight__c} kg</div> -->
                                                     </div>
@@ -310,7 +313,8 @@
         <section role="dialog" class="slds-modal slds-fade-in-open slds-modal_x-large">
             <div class="slds-modal__container">
                 <header class="slds-modal__header">
-                    <h2 class="slds-text-heading_medium">AI Scheduling Result</h2>
+                    <h2 class="slds-text-heading_medium">Auto Schedule
+                        Result</h2>
                     <button class="slds-button slds-modal__close" onclick={closeResultModal}>✕</button>
                 </header>
 
@@ -353,7 +357,8 @@
         <section role="dialog" class="slds-modal slds-fade-in-open slds-modal_x-large">
             <div class="slds-modal__container">
                 <header class="slds-modal__header">
-                    <h2 class="slds-text-heading_medium">AI Scheduling Log Result</h2>
+                    <h2 class="slds-text-heading_medium">Auto Schedule
+                        Result</h2>
                     <button class="slds-button slds-modal__close"
                         onclick={closeHandleFlowAiScheduleLogStatus}>✕</button>
                 </header>
@@ -371,7 +376,7 @@
         <section role="dialog" class="slds-modal slds-fade-in-open slds-modal_x-large">
             <div class="slds-modal__container">
                 <header class="slds-modal__header">
-                    <h2 class="slds-text-heading_medium">AI Validation</h2>
+                    <h2 class="slds-text-heading_medium">Validate Schedule</h2>
                     <button class="slds-button slds-modal__close" onclick={closeHandleFlowAiValidation}>✕</button>
                 </header>
                 <div class="slds-modal__content">
@@ -384,4 +389,22 @@
 
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
+    <template if:true={showModalConfirmFulfillmentFlow}>
+        <section role="dialog" class="slds-modal slds-fade-in-open slds-modal_x-large">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">Confirm Fulfillment</h2>
+                    <button class="slds-button slds-modal__close" onclick={closeHandleFlowConfirmFulfillment}>✕</button>
+                </header>
+                <div class="slds-modal__content">
+                    <lightning-flow flow-api-name={flowConfirmFulfillmentName} flow-finish-behavior="NONE"
+                        onstatuschange={handleFlowConfirmFulfillment}>
+                    </lightning-flow>
+                </div>
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
 </template>

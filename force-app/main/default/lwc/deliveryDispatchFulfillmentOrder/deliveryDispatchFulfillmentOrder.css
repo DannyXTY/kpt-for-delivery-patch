@@ -330,6 +330,7 @@
     cursor: pointer;
     padding: 0 4px;
     font-size: 14px;
+    pointer-events: auto;
 }
 
 .remove-btn:hover {
@@ -450,7 +451,12 @@
 .white-url {
     color: white !important;
     text-decoration: underline;
+    pointer-events: auto;
     /* optional */
+}
+
+.pointer-events-auto {
+    pointer-events: auto;
 }
 
 .white-url:hover {

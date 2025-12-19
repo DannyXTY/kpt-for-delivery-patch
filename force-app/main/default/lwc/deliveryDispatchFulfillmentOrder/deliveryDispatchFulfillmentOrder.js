@@ -67,6 +67,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     flowAiValidationName = 'Fulfillment_AI_Scheduling_Validate_Fulfillment_Schedule';
     flowAiValidateInput = [];
 
+    // handle
+    showModalConfirmFulfillmentFlow = false;
+    flowConfirmFulfillmentName = 'Delivery_Dispatch_Confirm_Fulfillment'
+
 
     orderColumns = [
         { label: 'Order Name', fieldName: 'name', type: 'text' },
@@ -410,7 +414,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                     truckId: r.Truck__c,
                     orderNumber: r.Order__r?.OrderNumber || '-',
                     deliveryDate: r.Delivery_Date__c,
-                    products: r.Fulfillment_Order_Product_Items__r,
+                    products: (r.Fulfillment_Order_Product_Items__r || []).map(p => ({
+                        ...p,
+                        productsNameAndCode: `${p.Product_Code__c} | ${p.Name}`
+                    })),
                     productsRaw: (r.Fulfillment_Order_Product_Items__r || [])
                         .map(p => `ProductCode: ${p.Product_Code__c} (Qty: ${p.Quantity__c})<br>` +
                             `Weight: ${p.Total_Weight__c}<br><br>`)
@@ -464,7 +471,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                 quantity: 0,
                 weight: r.Total_Weight__c,
                 orderNumber: r.Order__r?.OrderNumber || '-',
-                products: r.Fulfillment_Order_Product_Items__r,
+                products: (r.Fulfillment_Order_Product_Items__r || []).map(p => ({
+                    ...p,
+                    productsNameAndCode: `${p.Product_Code__c} |  ${p.Product__r?.Name}`
+                })),
                 productsRaw: (r.Fulfillment_Order_Product_Items__r || [])
                     .map(p => `ProductCode: ${p.Product_Code__c} (Qty: ${p.Quantity__c})<br>` +
                         `Weight: ${p.Total_Weight__c}<br><br>`)
@@ -863,12 +873,26 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         }
     }
 
+    handleFlowConfirmFulfillment(event) {
+        console.log('handleFlowConfirmFulfillment')
+        console.log(event.detail.status)
+        if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
+            this.showModalConfirmFulfillmentFlow = false;
+            this.handleRefresh();
+        }
+    }
+
+
     closeHandleFlowAiScheduleLogStatus() {
         this.showModalAiSchedulingLog = false;
     }
 
     closeHandleFlowAiValidation() {
         this.showModalAiValidateResult = false;
+    }
+
+    closeHandleFlowConfirmFulfillment() {
+        this.showModalConfirmFulfillmentFlow = false;
     }
 
     handleShowModalAIValidateFlow() {
@@ -886,6 +910,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         ];
 
         this.showModalAiValidateResult = true;
+    }
+
+    handleShowModalConfirmFulfillmentFlow() {
+        this.showModalConfirmFulfillmentFlow = true;
     }
 
 }
