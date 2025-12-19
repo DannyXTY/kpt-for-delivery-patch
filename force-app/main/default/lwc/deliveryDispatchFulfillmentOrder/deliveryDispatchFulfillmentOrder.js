@@ -1,4 +1,4 @@
-import { LightningElement, track, wire } from 'lwc';
+import { LightningElement, track, wire, api } from 'lwc';
 import getAccounts from '@salesforce/apex/DragDropView.getAccounts';
 
 import getTruckList from '@salesforce/apex/DragDropView.getTruckList';
@@ -6,25 +6,49 @@ import { NavigationMixin } from 'lightning/navigation';
 
 import getFulfillmentOrders from '@salesforce/apex/DeliveryDispatchFulfillment.getFulfillmentOrders';
 import getFilteredFulfillmentOrders from '@salesforce/apex/DeliveryDispatchFulfillment.getFilteredFulfillmentOrders';
+import getAISchedulingResult from '@salesforce/apex/DeliveryDispatchFulfillment.getAISchedulingResult';
+
+import getAiSchedulingLog from '@salesforce/apex/DeliveryDispatchFulfillment.getAiSchedulingLog';
+import getSchedulingLogItems from '@salesforce/apex/DeliveryDispatchFulfillment.getSchedulingLogItems';
+import getDeliveryConditionItems from '@salesforce/apex/DeliveryDispatchFulfillment.getDeliveryConditionItems';
 
 import upsertDeliveryInfoFO from '@salesforce/apex/DeliveryDispatchFulfillment.upsertDeliveryInfoFO';
 
 import updateFOToPending from '@salesforce/apex/DeliveryDispatchFulfillment.updateFOToPending';
+
+import getOutOfServiceTrucks
+    from '@salesforce/apex/DeliveryDispatchFulfillment.getOutOfServiceTrucks';
 
 import { refreshApex } from '@salesforce/apex';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(LightningElement) {
+
     draggedOrderId = null;
+    isFlowInitialized = false;
+
+    fulfillmentAISchedulingLogId = "";
+    isLoading = false;
+    pollingInterval;
+
+    // for showing result;
+    showResultAIScheduleModal = false;
+
+    aiSchedulingLogs = [];
+    schedulingLogItems = [];
+    deliveryConditionItems = [];
 
     countSelectedCheckbox = 0;
     selectedDate = new Date();
     selectedCustomer = 'all';
     countDraftFulfillments = 0;
+    countPendingFulfillments = 0;
     countAssignedFulfillments = 0;
     countConfirmedFulfillments = 0;
     countAllocatedFulfillments = 0;
+
+    weekStartText = "";
     weekStart = "";
     weekEnd = "";
 
@@ -34,10 +58,70 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     showFlow = false;
     flowInputs = [];
 
+
+    flowAiScheduleLogResultName = 'Delivery_Dispatch_AI_Schedule_Result';
+    showModalAiSchedulingLog = false;
+
+    // screen flow modal
+    showModalAiValidateResult = false;
+    flowAiValidationName = 'Fulfillment_AI_Scheduling_Validate_Fulfillment_Schedule';
+    flowAiValidateInput = [];
+
+    // handle
+    showModalConfirmFulfillmentFlow = false;
+    flowConfirmFulfillmentName = 'Delivery_Dispatch_Confirm_Fulfillment'
+
+
     orderColumns = [
         { label: 'Order Name', fieldName: 'name', type: 'text' },
         { label: 'Customer', fieldName: 'customer', type: 'text' },
-        { label: 'Details', fieldName: 'productsRaw', type: 'text' }
+    ];
+
+    aiSchedulingLogColumns = [
+        {
+            label: 'Log Id',
+            fieldName: 'logItemUrl',
+            type: 'url',
+            typeAttributes: {
+                label: { fieldName: 'Name' },
+                target: '_blank'
+            }
+        },
+        { label: 'Summary Notes', fieldName: 'Summary_Notes__c' },
+        { label: 'Week Start Date', fieldName: 'Week_Start_Date__c' },
+        { label: 'Week End Date', fieldName: 'Week_End_Date__c' },
+    ];
+
+    schedulingLogColumns = [
+        {
+            label: 'Log Item Name',
+            fieldName: 'logItemUrl',
+            type: 'url',
+            typeAttributes: {
+                label: { fieldName: 'Name' },
+                target: '_blank'
+            }
+        },
+        { label: 'Fulfillment Order', fieldName: 'Fulfillment_Order__c' },
+        { label: 'Recommended Delivery Date', fieldName: 'Recommended_Delivery_Date__c', type: 'date' },
+        { label: 'Recommended Truck', fieldName: 'Recommended_Truck__c' },
+        { label: 'Recommendation Status', fieldName: 'Recommendation_Status__c' }
+    ];
+
+    deliveryConditionColumns = [
+        {
+            label: 'Id',
+            fieldName: 'logItemUrl',
+            type: 'url',
+            typeAttributes: {
+                label: { fieldName: 'Id' },
+                target: '_blank'
+            }
+        },
+        { label: 'FO Product Item', fieldName: 'Fulfillment_Order_Product_Item__c' },
+        { label: 'Reason', fieldName: 'Delivery_Condition_Reason__c' },
+        { label: 'Status', fieldName: 'Delivery_Condition_Status__c' },
+        { label: 'Suggestion', fieldName: 'Delivery_Condition_Suggestion__c' }
     ];
 
 
@@ -61,20 +145,6 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         }
     }
 
-    /*
-    example orders
-    @track orders = [
-        {
-            id: 1, name: 'FI-001',
-            customer: 'FPFL000021',
-            productCode: "FPFL000021",
-            productName: "ใบเกลียวชุบแข็ง 152x34x144x3.2x59x700 L",
-            quantity: 2, weight: 4000,
-            checked: false,
-        }
-    ];
-    */
-
     @track calendarData = [
     ];
 
@@ -84,10 +154,21 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     }
 
     handleDragOver(e) {
+        if (e.currentTarget.dataset.outOfService === 'true') {
+            return;
+        }
         e.preventDefault();
     }
 
     handleDrop(e) {
+        if (e.currentTarget.dataset.outOfService === 'true') {
+            this.showToast(
+                'Unavailable',
+                'Truck is out of service on this date',
+                'warning'
+            );
+            return;
+        }
         e.preventDefault();
 
         const orderId = e.dataTransfer.getData('text/plain');
@@ -163,8 +244,6 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
         if (order.checked) {
             // process to AI scheduling
-
-
             this.countSelectedCheckbox++;
         } else {
             this.countSelectedCheckbox--;
@@ -187,10 +266,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
             truck.assignedOrders = truck.assignedOrders.filter(o => o.id !== orderId);
 
-            orderObj.status = "Draft";
+            orderObj.status = "Pending";
             orderObj.truckId = null;
             orderObj.deliveryDate = null;
-            orderObj.cssClass = "draft-order";
+            orderObj.cssClass = "pending-order";
 
             this.recalcTruckStatuses();
             this.showToast("Success", "Removed from Truck", "success");
@@ -219,13 +298,6 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.loadFilteredOrders();
     }
 
-    getMonday(dateStr) {
-        const d = new Date(dateStr);
-        const day = d.getDay(); // 0=Sun
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        return new Date(d.setDate(diff));
-    }
-
     generateWeek(dateString) {
         const base = new Date(dateString);
 
@@ -236,12 +308,17 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         const monday = new Date(base);
         monday.setDate(base.getDate() + mondayOffset);
 
-        this.weekStart = monday.toISOString().slice(0, 10);
+        this.weekStart = monday.toISOString().slice(0, 10)
+
+        const normalizedWeekStart = this.normalizeWeekStart(this.weekStart);
+        this.weekStartText = this.formatToYYYYMMDD(normalizedWeekStart)
 
         const friday = new Date(monday);
         friday.setDate(monday.getDate() + 4);
 
         this.weekEnd = friday.toISOString().slice(0, 10);
+
+        this.loadOutOfService();
 
         const days = [];
 
@@ -263,9 +340,47 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.calendarData = days;
         this.recalcTruckStatuses();
         this.rebuildAssignedOrdersIntoCalendar();
+        this.resetSelection();
     }
 
+    async loadOutOfService() {
+        this.outOfService = await getOutOfServiceTrucks({
+            weekStart: this.weekStart,
+            weekEnd: this.weekEnd
+        });
+
+        this.applyOutOfServiceFlags();
+    }
+
+    applyOutOfServiceFlags() {
+        this.calendarData = this.calendarData.map(day => {
+            const trucks = day.trucks.map(truck => {
+                const blocked = this.outOfService.some(s =>
+                    s.Truck__c === truck.truckId &&
+                    s.Start_Date__c <= day.date &&
+                    s.End_Date__c >= day.date
+                );
+
+                return {
+                    ...truck,
+                    isOutOfService: blocked,
+                    cssClass: blocked
+                        ? 'truck-card truck-out-of-service'
+                        : 'truck-card '
+                };
+            });
+
+            return { ...day, trucks };
+        });
+    }
+
+
+
     async connectedCallback() {
+        this.loadContentDeliveryDispatch();
+    }
+
+    async loadContentDeliveryDispatch() {
         const today = new Date();
         this.selectedDate = today.toISOString().slice(0, 10);
 
@@ -274,6 +389,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
         this.generateWeek(this.selectedDate);
         this.loadFilteredOrders()
+
     }
 
     async fetchfulfillmentOrderProductItemList() {
@@ -298,7 +414,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                     truckId: r.Truck__c,
                     orderNumber: r.Order__r?.OrderNumber || '-',
                     deliveryDate: r.Delivery_Date__c,
-                    products: r.Fulfillment_Order_Product_Items__r,
+                    products: (r.Fulfillment_Order_Product_Items__r || []).map(p => ({
+                        ...p,
+                        productsNameAndCode: `${p.Product_Code__c} | ${p.Name}`
+                    })),
                     productsRaw: (r.Fulfillment_Order_Product_Items__r || [])
                         .map(p => `ProductCode: ${p.Product_Code__c} (Qty: ${p.Quantity__c})<br>` +
                             `Weight: ${p.Total_Weight__c}<br><br>`)
@@ -312,6 +431,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
             console.log(this.orders)
 
             this.countDraftFulfillments = this.orders.filter((o) => o.status === 'Draft').length;
+            this.countPendingFulfillments = this.orders.filter((o) => o.status === 'Pending').length;
             this.countAssignedFulfillments = this.orders.filter((o) => o.status === 'Assigned').length;
             this.countConfirmedFulfillments = this.orders.filter((o) => o.status === 'Confirmed').length;
             this.countAllocatedFulfillments = this.orders.filter((o) => o.status === 'Allocated').length;
@@ -341,9 +461,9 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                 deliveryDate: r.Delivery_Date__c,
                 weight: r.Total_Weight__c,
                 truckId: r.Truck__c,
-                customerId: r.Order__r?.Account__c,
-                customer: r.Order__r?.Account__r?.Abbreviation__c,
-                orderNumber: r.Order__r?.OrderNumber,
+                customerId: r.Order__r?.Account__c || null,
+                customer: r.Order__r?.Account?.Abbreviation__c || '-',
+                orderNumber: r.Order__r?.OrderNumber || '-',
                 products: r.Fulfillment_Order_Product_Items__r,
                 productCode: "",
                 productName: "",
@@ -351,7 +471,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                 quantity: 0,
                 weight: r.Total_Weight__c,
                 orderNumber: r.Order__r?.OrderNumber || '-',
-                products: r.Fulfillment_Order_Product_Items__r,
+                products: (r.Fulfillment_Order_Product_Items__r || []).map(p => ({
+                    ...p,
+                    productsNameAndCode: `${p.Product_Code__c} |  ${p.Product__r?.Name}`
+                })),
                 productsRaw: (r.Fulfillment_Order_Product_Items__r || [])
                     .map(p => `ProductCode: ${p.Product_Code__c} (Qty: ${p.Quantity__c})<br>` +
                         `Weight: ${p.Total_Weight__c}<br><br>`)
@@ -365,6 +488,13 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
             this.rebuildAssignedOrdersIntoCalendar();
             this.recalcTruckStatuses();
+
+            this.countDraftFulfillments = this.orders.filter((o) => o.status === 'Draft').length;
+            this.countPendingFulfillments = this.orders.filter((o) => o.status === 'Pending').length;
+            this.countAssignedFulfillments = this.orders.filter((o) => o.status === 'Assigned').length;
+            this.countConfirmedFulfillments = this.orders.filter((o) => o.status === 'Confirmed').length;
+            this.countAllocatedFulfillments = this.orders.filter((o) => o.status === 'Allocated').length;
+
         } catch (e) {
             console.error('Filter error', e);
         }
@@ -373,7 +503,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     rebuildAssignedOrdersIntoCalendar() {
         // Loop through all Assigned orders
         this.orders
-            .filter(o => o.status !== 'Draft')
+            .filter(o => o.status !== 'Pending')
             .forEach(order => {
                 // find calendar day
                 const day = this.calendarData.find(d => d.date === order.deliveryDate);
@@ -384,12 +514,14 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                 if (!truck) return;
 
                 let cssClass = '';
-                if (order.status === 'Draft') {
-                    cssClass = 'draft-order';
+                if (order.status === 'Pending') {
+                    cssClass = 'pending-order';
                 } else if (order.status === 'Assigned') {
                     cssClass = 'assigned-order';
                 } else if (order.status === 'Confirmed') {
                     cssClass = 'confirmed-order';
+                } else if (order.status === 'Error') {
+                    cssClass = 'error-order';
                 } else {
                     cssClass = 'allocated-order';
                 }
@@ -485,10 +617,10 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         });
     }
 
-    get draftOrders() {
-        console.log("draftorders get")
+    get pendingOrders() {
+        console.log("pendingorders get")
         console.log(this.orders)
-        return this.orders?.filter(o => o.status === 'Draft') || [];
+        return this.orders?.filter(o => o.status === 'Pending') || [];
     }
 
     get assignedOrders() {
@@ -520,59 +652,268 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.showModal = false;
     }
 
+
+    formatToYYYYMMDD(date) {
+        const d = new Date(date);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+
+        return `${year}-${month}-${day}`;
+    }
+
+    formatToDDMMYYYY(date) {
+        const d = new Date(date);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+
+        return `${day}/${month}/${year}`;
+    }
+
     confirmAISchedule() {
         // This is where you later call your AI scheduling logic
         console.log("Selected orders:", this.selectedOrders);
         console.log("Week:", this.weekStart, this.weekEnd);
+        const normalizedWeekStart = this.normalizeWeekStart(this.weekStart);
+        console.log("normalizedWeekStart:", this.weekStart, this.weekEnd);
 
-        const weekStartDate = this.formatToDDMMYYYY(this.weekStart);
+        const weekStartDate = this.formatToDDMMYYYY(normalizedWeekStart);
         const weekEndDate = this.formatToDDMMYYYY(this.weekEnd);
-        const fulfillmentOrderProductItemIdList = this.selectedOrders
+        const fulfillmentOrderIdList = this.selectedOrders
             .map(o => o.id) // or o.fulfillmentOrderProductItemId (your real field)
             .join(",");
         console.log("weekStartDate:", weekStartDate);
         console.log("weekEndDate:", weekEndDate);
-        console.log("fulfillmentOrderProductItemIdList:", fulfillmentOrderProductItemIdList);
+        console.log("fulfillmentOrderIdList:", fulfillmentOrderIdList);
 
 
         this.showToast("AI Scheduling", "Processing selected orders...", "info");
 
         this.showModal = false;
 
-        this.navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderProductItemIdList);
+        this.navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderIdList);
 
     }
 
-    formatToDDMMYYYY(iso) {
-        const [y, m, d] = iso.split("-");
-        return `${d}/${m}/${y}`;
+    normalizeWeekStart(date) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const input = new Date(date);
+        input.setHours(0, 0, 0, 0);
+
+        return input < today ? today : input;
     }
 
-    navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderProductItemIdList) {
+    navigateToFlow(weekStartDate, weekEndDate, fulfillmentOrderIdList) {
         this.flowInputs = [
             { name: "weekStartDate", type: "String", value: weekStartDate },
             { name: "weekEndDate", type: "String", value: weekEndDate },
-            { name: "fulfillmentOrderProductItemList", type: "String", value: fulfillmentOrderProductItemIdList }
+            { name: "fulfillmentOrderProductItemList", type: "String", value: fulfillmentOrderIdList }
         ];
 
         this.showFlow = true;
-
+        this.isFlowInitialized = true;
     }
 
     handleFlowStatus(event) {
         console.log("Flow status:", event.detail.status);
 
+        if (event.detail.status === "STARTED") {
+            console.log('FLOW STARTED')
+        }
+
         if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
-            this.showFlow = false;
-            this.showToast("Success", "AI Scheduling completed", "success");
+            console.log("event.detail")
+            console.log(JSON.stringify(event.detail))
+
+            setTimeout(() => {
+                this.showFlow = false;
+                this.isFlowInitialized = false;
+
+                this.showToast(
+                    'Success',
+                    'AI scheduling submitted',
+                    'success'
+                );
+                this.resetSelection();
+            }, 0);
         }
     }
+
+    resetSelection() {
+        this.countSelectedCheckbox = 0;
+
+        this.orders = this.orders.map(order => ({
+            ...order,
+            checked: false
+        }));
+
+        // this.selectedOrders = [];
+    }
+
 
     get inputVariables() {
         return this.flowInputs;
     }
 
+    get inputValidateAIVariables() {
+        return this.flowAiValidateInput
+    }
+
     handleRefresh() {
         window.location.reload();
     }
+
+    closeFlowModal() {
+        this.showFlow = false;
+    }
+
+    querySchedulingLog(logId) {
+        console.log("querySchedulingLog")
+
+        this.isLoading = true;
+        // clear existing polling if any
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+        }
+
+        // poll every 5 seconds
+        this.pollingInterval = setInterval(() => {
+            getAISchedulingResult({ id: logId })
+                .then(result => {
+                    if (!result || result.length === 0) {
+                        return;
+                    }
+
+                    const status = result[0].Status__c;
+
+                    console.log('AI Scheduling Status:', status);
+
+                    if (status === 'Completed') {
+                        clearInterval(this.pollingInterval);
+                        this.pollingInterval = null;
+
+                        this.isLoading = false;
+                        // this.loadContentDeliveryDispatch();
+                        // this.fetchAISchedulingDetails(logId);
+
+                        this.showToast('Success', 'AI scheduling submitted', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error(error)
+                    clearInterval(this.pollingInterval);
+                    this.pollingInterval = null;
+
+                    this.isLoading = false;
+                    this.showToast('Error', 'Failed to refresh scheduling', 'error');
+                });
+        }, 5000);
+    }
+
+
+    fetchAISchedulingDetails(logId) {
+        Promise.all([
+            getAiSchedulingLog({ schedulingLogId: logId }),
+            getSchedulingLogItems({ schedulingLogId: logId }),
+            getDeliveryConditionItems({ schedulingLogId: logId })
+        ])
+            .then(([aiLogs, logItems, conditionItems]) => {
+                this.aiSchedulingLogs = aiLogs.map(item => ({
+                    ...item,
+                    logItemUrl: '/' + item.Id
+                }));
+
+                this.schedulingLogItems = logItems.map(item => ({
+                    ...item,
+                    logItemUrl: '/' + item.Id
+                }));
+
+                this.deliveryConditionItems = conditionItems.map(item => ({
+                    ...item,
+                    logItemUrl: '/' + item.Id
+                }));
+
+                // this.deliveryConditionItems = conditionItems;
+
+                this.showResultAIScheduleModal = true;
+
+                this.loadContentDeliveryDispatch();
+            })
+            .catch(error => {
+                console.error(error);
+                this.showToast('Error', 'Failed to load AI scheduling details', 'error');
+            });
+    }
+
+    closeResultModal() {
+        this.showResultAIScheduleModal = false;
+    }
+
+    handleShowModalAISchedulingLogFlow() {
+        this.showModalAiSchedulingLog = true;
+    }
+
+    handleFlowAiScheduleLogStatus(event) {
+        console.log('event.detail.status')
+        console.log(event.detail.status)
+        if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
+            this.showModalAiSchedulingLog = false;
+        }
+    }
+
+    handleFlowAiValidation(event) {
+        console.log('handleFlowAiValidation')
+        console.log(event.detail.status)
+        if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
+            this.showModalAiValidateResult = false;
+            this.handleRefresh();
+        }
+    }
+
+    handleFlowConfirmFulfillment(event) {
+        console.log('handleFlowConfirmFulfillment')
+        console.log(event.detail.status)
+        if (event.detail.status === "FINISHED" || event.detail.status === "FINISHED_SCREEN") {
+            this.showModalConfirmFulfillmentFlow = false;
+            this.handleRefresh();
+        }
+    }
+
+
+    closeHandleFlowAiScheduleLogStatus() {
+        this.showModalAiSchedulingLog = false;
+    }
+
+    closeHandleFlowAiValidation() {
+        this.showModalAiValidateResult = false;
+    }
+
+    closeHandleFlowConfirmFulfillment() {
+        this.showModalConfirmFulfillmentFlow = false;
+    }
+
+    handleShowModalAIValidateFlow() {
+        const normalizedWeekStart = this.normalizeWeekStart(this.weekStart);
+
+        const weekStartDate = this.formatToDDMMYYYY(normalizedWeekStart);
+        const weekEndDate = this.formatToDDMMYYYY(this.weekEnd);
+
+        console.log(weekStartDate)
+        console.log(weekEndDate)
+
+        this.flowAiValidateInput = [
+            { name: "weekStartDate", type: "String", value: weekStartDate },
+            { name: "weekEndDate", type: "String", value: weekEndDate },
+        ];
+
+        this.showModalAiValidateResult = true;
+    }
+
+    handleShowModalConfirmFulfillmentFlow() {
+        this.showModalConfirmFulfillmentFlow = true;
+    }
+
 }

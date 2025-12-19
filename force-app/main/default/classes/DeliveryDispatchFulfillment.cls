@@ -9,6 +9,47 @@ public with sharing class DeliveryDispatchFulfillment {
         }
     }
 
+    @AuraEnabled(cacheable=false)
+    public static List<Fulfillment_AI_Scheduling_Log__c> getAiSchedulingLog(
+        Id schedulingLogId
+    ) {
+        return [
+            SELECT Id, Name, Status__c, Summary_Assigned_Count__c,
+            Summary_Notes__c, Summary_Total_Items__c, Summary_Unassigned_Count__c,
+            Week_End_Date__c, Week_Start_Date__c
+            FROM Fulfillment_AI_Scheduling_Log__c
+            WHERE Id = :schedulingLogId
+            ORDER BY CreatedDate ASC
+        ];
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static List<Fulfillment_AI_Scheduling_Log_Item__c> getSchedulingLogItems(
+        Id schedulingLogId
+    ) {
+        return [
+            SELECT Id, Name, Fulfillment_Order__c, Recommendation_Reason__c,
+            Recommendation_Status__c, Recommendation_Suggestion__c, Recommended_Delivery_Date__c,
+            Recommended_Truck__c, Fulfillment_AI_Scheduling_Log__c
+            FROM Fulfillment_AI_Scheduling_Log_Item__c
+            WHERE Fulfillment_AI_Scheduling_Log__c = :schedulingLogId
+            ORDER BY CreatedDate ASC
+        ];
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static List<Fulfillment_AI_Delivery_Condition_Item__c> getDeliveryConditionItems(
+        Id schedulingLogId
+    ) {
+        return [
+            SELECT Id, Name, Fulfillment_AI_Scheduling_Log__c, Fulfillment_AI_Scheduling_Log_Item__c,
+            Delivery_Condition__c, Delivery_Condition_Reason__c, Delivery_Condition_Status__c,
+            Delivery_Condition_Suggestion__c
+            FROM Fulfillment_AI_Delivery_Condition_Item__c
+            WHERE Fulfillment_AI_Scheduling_Log__c = :schedulingLogId
+            ORDER BY CreatedDate ASC
+        ];
+    }
 
     @AuraEnabled(cacheable=true)
     public static List<FulfillmentOrder__c> getFulfillmentOrders() {
@@ -43,15 +84,29 @@ public with sharing class DeliveryDispatchFulfillment {
             '       Truck__c, Order__r.Id, Order__r.Account.Abbreviation__c,' + 
             '       Order__r.OrderNumber, Order__r.Account.Name, Customer_No__c, ' +
             '       CurrencyIsoCode, No_of_Product_Items__c, ' +
-            '       (SELECT Id, Name, Product_Code__c, Quantity__c, Total_Weight__c FROM Fulfillment_Order_Product_Items__r)' +
+            '       (SELECT Id, Name, Product_Code__c, Quantity__c, Total_Weight__c, Product__r.Name FROM Fulfillment_Order_Product_Items__r)' +
             ' FROM FulfillmentOrder__c WHERE (Order__r.EffectiveDate  <= :startDate OR Order__r.EffectiveDate = NULL) AND (Order__r.EndDate <= :endDate OR Order__r.EndDate = NULL)';
 
         if (customerId != null && customerId != 'all') {
             baseQuery += ' AND Order__r.Id = :customerId';
         }
 
+        baseQuery += ' ORDER BY CreatedDate DESC';
         return Database.query(baseQuery);
     }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Fulfillment_AI_Scheduling_Log__c> getAISchedulingResult(
+        String id
+    ) {
+        return [
+            SELECT Id, Status__c
+            FROM Fulfillment_AI_Scheduling_Log__c
+            WHERE Id = :id
+            LIMIT 1
+        ];
+    }
+
 
 
     @AuraEnabled
@@ -127,8 +182,22 @@ public with sharing class DeliveryDispatchFulfillment {
 
         FOtoUpdate.Truck__c = null;
         FOtoUpdate.Delivery_Date__c = null;
-        FOtoUpdate.Status__c = 'Draft';
+        FOtoUpdate.Status__c = 'Pending';
         update FOtoUpdate;
     }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Out_of_Service_Truck_Schedule__c> getOutOfServiceTrucks(
+        Date weekStart,
+        Date weekEnd
+    ) {
+        return [
+            SELECT Id, Truck__c, Start_Date__c, End_Date__c
+            FROM Out_of_Service_Truck_Schedule__c
+            WHERE Start_Date__c <= :weekEnd
+            AND End_Date__c >= :weekStart
+        ];
+    }
+
 
 }
