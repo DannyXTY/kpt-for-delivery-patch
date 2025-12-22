@@ -19,6 +19,12 @@ import updateFOToPending from '@salesforce/apex/DeliveryDispatchFulfillment.upda
 import getOutOfServiceTrucks
     from '@salesforce/apex/DeliveryDispatchFulfillment.getOutOfServiceTrucks';
 
+import getHolidays from '@salesforce/apex/DeliveryDispatchFulfillment.getHolidays';
+
+import { getMonday } from './dateUtils';
+import { buildWeek } from './calendarUtils';
+import { calculateTruckStatus } from './truckUtils'
+
 import { refreshApex } from '@salesforce/apex';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -129,6 +135,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     @track accountError;
     @track truckList = [];
     @track truckListError;
+    @track holidays = [];
+
 
     @track orders = [];
 
@@ -157,6 +165,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         if (e.currentTarget.dataset.outOfService === 'true') {
             return;
         }
+
+
         e.preventDefault();
     }
 
@@ -180,6 +190,16 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
     async assignOrder(orderId, truckId, date) {
         const orderObj = this.orders.find(o => o.id == orderId || o.name == orderId);
+
+        const day = this.calendarData.find(d => d.date === date);
+        if (day?.isHoliday) {
+            this.showToast(
+                'Holiday',
+                'Cannot assign orders on a holiday',
+                'error'
+            );
+            return;
+        }
 
         if (!orderObj) {
             console.error('Order not found:', orderId);
@@ -298,7 +318,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         this.loadFilteredOrders();
     }
 
-    generateWeek(dateString) {
+    async generateWeek(dateString) {
+
         const base = new Date(dateString);
 
         const dayOfWeek = base.getDay();
@@ -338,10 +359,39 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
         }
 
         this.calendarData = days;
+
+        await this.fetchHolidays();
+        this.applyHolidayFlags();
+
         this.recalcTruckStatuses();
         this.rebuildAssignedOrdersIntoCalendar();
         this.resetSelection();
     }
+
+    applyHolidayFlags() {
+        this.calendarData = this.calendarData.map(day => {
+            const holiday = this.holidays.find(h =>
+                day.date >= h.Start_Date__c &&
+                day.date <= h.End_Date__c
+            );
+
+            let helpText = null;
+
+            if (holiday) {
+                helpText =
+                    `Holiday: ${holiday.Holiday_Description__c} ` +
+                    `Period: ${holiday.Start_Date__c} → ${holiday.End_Date__c}`
+            }
+
+            return {
+                ...day,
+                isHoliday: !!holiday,
+                dayCssClass: holiday ? 'day-column truck-out-of-service' : 'day-column',
+                helpText
+            };
+        });
+    }
+
 
     async loadOutOfService() {
         this.outOfService = await getOutOfServiceTrucks({
@@ -377,6 +427,7 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
 
     async connectedCallback() {
+        console.log('connectedCallback')
         this.loadContentDeliveryDispatch();
     }
 
@@ -447,6 +498,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
             console.log(this.selectedCustomer)
             console.log(this.weekStart)
             console.log(this.weekEnd)
+
+
 
             const result = await getFilteredFulfillmentOrders({
                 customerId: this.selectedCustomer === 'all' ? null : this.selectedCustomer,
@@ -575,52 +628,18 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
 
     handleCustomerChange(event) {
         this.selectedCustomer = event.target.value;
-
-        console.log("selectedCustomer", this.selectedCustomer);
         this.loadFilteredOrders();
     }
 
 
     recalcTruckStatuses() {
         this.calendarData = this.calendarData.map(day => {
-            const trucks = day.trucks.map(t => {
-                // sum weights (assignedOrders might be objects or ids — handle both)
-                const total = (t.assignedOrders || []).reduce((sum, o) => {
-                    // if object with weight, use it; if ID or string, find from orders
-                    const weight = (o && typeof o === 'object' && o.weight)
-                        ? o.weight
-                        : (() => {
-                            const found = this.orders.find(x => x.id == o || x.name == o);
-                            return found ? found.weight : 0;
-                        })();
-                    return sum + weight;
-                }, 0);
-
-                const capacity = t.capacity || 0;
-                const remaining = Number((capacity - total).toFixed(2));
-                ;
-
-                const ratio = capacity > 0 ? total / capacity : 0;
-                let statusClass = 'truck-capacity under-capacity';
-                if (ratio > 1) statusClass = 'truck-capacity at-capacity';
-                else if (ratio >= 0.8) statusClass = 'truck-capacity near-capacity';
-
-                // optional: percent used for capacity bar
-                const capacityPct = Math.min(100, Math.round((capacity > 0 ? (total / capacity) * 100 : 0)));
-
-                return {
-                    ...t,
-                    totalWeight: total,
-                    remainingCapacity: remaining,
-                    capacityPct,
-                    statusClass,
-                    isEmpty: (t.assignedOrders || []).length === 0
-                };
-            });
-
             return {
                 ...day,
-                trucks
+                trucks: day.trucks.map(t =>
+                    calculateTruckStatus(t, this.orders)
+                )
+
             };
         });
     }
@@ -923,5 +942,13 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     handleShowModalConfirmFulfillmentFlow() {
         this.showModalConfirmFulfillmentFlow = true;
     }
+
+    async fetchHolidays() {
+        this.holidays = await getHolidays({
+            startDate: this.weekStart,
+            endDate: this.weekEnd
+        });
+    }
+
 
 }

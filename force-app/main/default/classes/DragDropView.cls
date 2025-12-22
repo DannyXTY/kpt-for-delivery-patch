@@ -9,7 +9,7 @@ public with sharing class DragDropView {
             SELECT Id, Name, Industry, Phone, Abbreviation__c
             FROM Account
             WHERE Abbreviation__c != ''
-            ORDER BY Name
+            ORDER BY Abbreviation__c
             LIMIT 9999
         ];
     }

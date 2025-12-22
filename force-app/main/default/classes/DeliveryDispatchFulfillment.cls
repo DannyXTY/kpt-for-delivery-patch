@@ -82,13 +82,13 @@ public with sharing class DeliveryDispatchFulfillment {
         String baseQuery = 
             'SELECT Id, Name, Status__c, Delivery_Date__c, Total_Weight__c,' +
             '       Truck__c, Order__r.Id, Order__r.Account.Abbreviation__c,' + 
-            '       Order__r.OrderNumber, Order__r.Account.Name, Customer_No__c, ' +
+            '       Order__r.OrderNumber, Order__r.Account.Name, Customer_No__c, Order__r.EffectiveDate, ' +
             '       CurrencyIsoCode, No_of_Product_Items__c, ' +
             '       (SELECT Id, Name, Product_Code__c, Quantity__c, Total_Weight__c, Product__r.Name FROM Fulfillment_Order_Product_Items__r)' +
-            ' FROM FulfillmentOrder__c WHERE (Order__r.EffectiveDate  <= :startDate OR Order__r.EffectiveDate = NULL) AND (Order__r.EndDate <= :endDate OR Order__r.EndDate = NULL)';
+            ' FROM FulfillmentOrder__c WHERE (Order__r.EffectiveDate <= :endDate OR Order__r.EffectiveDate = NULL) ';
 
         if (customerId != null && customerId != 'all') {
-            baseQuery += ' AND Order__r.Id = :customerId';
+            baseQuery += ' AND Order__r.AccountId = :customerId';
         }
 
         baseQuery += ' ORDER BY CreatedDate DESC';
@@ -196,6 +196,16 @@ public with sharing class DeliveryDispatchFulfillment {
             FROM Out_of_Service_Truck_Schedule__c
             WHERE Start_Date__c <= :weekEnd
             AND End_Date__c >= :weekStart
+        ];
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Holiday_Schedule__c> getHolidays(Date startDate, Date endDate) {
+        return [
+            SELECT Id, Start_Date__c, End_Date__c, Name, Holiday_Description__c
+            FROM Holiday_Schedule__c
+            WHERE End_Date__c >= :startDate
+            AND Start_Date__c <= :endDate
         ];
     }
 

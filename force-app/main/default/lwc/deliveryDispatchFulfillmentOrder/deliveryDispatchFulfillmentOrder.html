@@ -80,7 +80,7 @@
             <div class="legend-item">
                 <div class="legend-item">
                     <div class="legend-color" style="background: #ffc0cb;"></div>
-                    <span>Truck Out of Service</span>
+                    <span>Date/Truck Out of Service</span>
                 </div>
 
             </div>
@@ -150,10 +150,14 @@
             <!-- RIGHT SIDE - CALENDAR -->
             <div class="calendar-panel">
                 <template for:each={calendarData} for:item="day">
-                    <div key={day.date} class="day-column">
+                    <div key={day.date} class={day.dayCssClass} data-date={day.date}>
 
                         <div class="day-header">
-                            <div class="day-name">{day.dayName}</div>
+                            <div class="day-name pointer-events-auto" title="alsdjflkdsjflaskdfj">{day.dayName}
+                                <template if:true={day.helpText}>
+                                    <lightning-helptext content={day.helpText}></lightning-helptext>
+                                </template>
+                            </div>
                             <div class="day-date">{day.date}</div>
                         </div>
 
