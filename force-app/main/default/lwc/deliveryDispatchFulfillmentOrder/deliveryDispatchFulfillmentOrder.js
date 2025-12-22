@@ -501,6 +501,12 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     }
 
     rebuildAssignedOrdersIntoCalendar() {
+        this.calendarData.forEach(day => {
+            day.trucks.forEach(truck => {
+                truck.assignedOrders = [];
+            });
+        });
+
         // Loop through all Assigned orders
         this.orders
             .filter(o => o.status !== 'Pending')
@@ -546,11 +552,12 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
     buildDefaultTrucks() {
         let buildTrucks = [];
         this.truckList.map((data) => {
+            const capacity = Number(data.Total_Weight_Allowed__c).toFixed(2);
             buildTrucks.push({
                 truckId: data.Id,
                 truckName: data.Name,
-                capacity: data.Total_Weight_Allowed__c,
-                remainingCapacity: data.Total_Weight_Allowed__c,
+                capacity: Number(capacity),
+                remainingCapacity: Number(capacity),
                 tooltip: `${data.Name} (Max Capacity: ${data.Total_Weight_Allowed__c} kg)`,
                 assignedOrders: []
             })
@@ -590,7 +597,8 @@ export default class DeliveryDispatchFulfillmentOrder extends NavigationMixin(Li
                 }, 0);
 
                 const capacity = t.capacity || 0;
-                const remaining = capacity - total;
+                const remaining = Number((capacity - total).toFixed(2));
+                ;
 
                 const ratio = capacity > 0 ? total / capacity : 0;
                 let statusClass = 'truck-capacity under-capacity';
